@@ -14,7 +14,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.IO;
-using System;
+using System.Collections;
+
 using System.Diagnostics;
 
 namespace PDS_Client
@@ -22,10 +23,21 @@ namespace PDS_Client
     /// <summary>
     /// Logica di interazione per MainWindow.xaml
     /// </summary>
+    /// 
+
+
+    struct queueObject
+    {
+        public string file;
+        public WatcherChangeTypes type;
+    }
+
+
     public partial class MainWindow : Window
     {
-
+        Queue<queueObject> eventsArray = new Queue<queueObject>();
         BindingList<FileSystemElement> currentWorkDirectory = new BindingList<FileSystemElement>();
+        
 
         public MainWindow()
         {
@@ -41,17 +53,20 @@ namespace PDS_Client
 
         private void watchFolder()
         {
-            FileSystemWatcher fs = new FileSystemWatcher("C:\\Users\\Gaetano\\Documents\\malnati");
+            FileSystemWatcher fs = new FileSystemWatcher("C:\\Users\\Marco\\Documents\\PDS_Folder");
             fs.Changed += new FileSystemEventHandler(OnChanged);
             fs.NotifyFilter = NotifyFilters.LastWrite;
             fs.EnableRaisingEvents = true;
 
         }
 
-        private static void OnChanged(object source, FileSystemEventArgs e)
+        private void OnChanged(object source, FileSystemEventArgs e)
         {
             // Specify what is done when a file is changed, created, or deleted.
             MessageBox.Show("File: " + e.FullPath + " " + e.ChangeType);
+            queueObject q; q.file = e.FullPath; q.type = e.ChangeType;
+            if (!this.eventsArray.Contains(q)) eventsArray.Enqueue(q);
+            
         }
 
 

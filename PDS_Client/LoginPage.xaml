@@ -35,7 +35,7 @@
 
 
         <Label  Content="Password" Grid.Row="5" Grid.Column="1" />
-        <TextBox Grid.Column="3" Grid.Row="5" Name="text_pass"  ></TextBox>
+        <PasswordBox Grid.Column="3" Grid.Row="5" Name="text_pass"  ></PasswordBox>
 
 
         <Button Content="Login" Name="btn_login" Grid.Row="7" Grid.Column="1" Click="btn_login_Click" />

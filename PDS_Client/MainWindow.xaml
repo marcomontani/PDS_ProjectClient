@@ -37,7 +37,7 @@
             <TabItem Header="Impostazioni">
                 <Grid Background="WhiteSmoke">
                     <StackPanel Orientation="Horizontal" Name="vsp_settings">
-                        <Label>Folder: "C:\Users\Marco\Documents" </Label>
+                        <Label>Folder: "C:\Users\Marco\Documents\PDS_Folder" </Label>
                     </StackPanel>
 
                 </Grid>
