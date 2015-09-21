@@ -14,7 +14,7 @@ using System.Windows.Shapes;
 
 using System.Net.Sockets;
 using System.Net;
-
+using System.Runtime.InteropServices;
 
 namespace PDS_Client
 {
@@ -29,20 +29,24 @@ namespace PDS_Client
         public Window1()
         {
             InitializeComponent();
-            
+
         }
 
 
         public void createSocket()
         {
+            
             try
             {
-                s = new Socket(SocketType.Dgram, ProtocolType.Tcp);
+                s = new Socket(SocketType.Stream, ProtocolType.Tcp);
+               
                 IPAddress sAddr = new IPAddress(2130706433); //  127.0.0.1 --> 2130706433
+                s.Connect(sAddr,7000);
                 if (!s.Connected) throw new SocketException();
             }
             catch(SocketException se)
             {
+                MessageBox.Show(se.Message);
                 // todo: send a popup ( "impossibile connettersi al server " )
             }
             
@@ -51,17 +55,26 @@ namespace PDS_Client
         private void btn_login_Click(object sender, RoutedEventArgs e)
         {
 
-            if (s == null) createSocket(); // the socket is already connected
+            //if (s == null) createSocket(); // the socket is already connected
             string username = ((TextBox)this.FindName("text_user")).Text;
-            string password = ((TextBox)this.FindName("text_pass")).Text; ;
+            string password = ((PasswordBox)this.FindName("text_pass")).Password;
 
             string message = "LOGIN " + username + " " + password;
-
-            s.Send(System.Text.Encoding.UTF8.GetBytes(message));
+           // s.Send(Encoding.ASCII.GetBytes("ciao"));
 
             // todo: wait for answer. if ok proceed
 
             (new MainWindow()).Show();
+            this.Close();
+        }
+
+        private void mouse_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            this.DragMove();
+        }
+
+        private void btn_x_Click(object sender, RoutedEventArgs e)
+        {
             this.Close();
         }
     }

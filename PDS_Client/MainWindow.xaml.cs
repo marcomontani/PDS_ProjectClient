@@ -53,7 +53,7 @@ namespace PDS_Client
 
         private void watchFolder()
         {
-            FileSystemWatcher fs = new FileSystemWatcher("C:\\Users\\Marco\\Documents\\PDS_Folder");
+            FileSystemWatcher fs = new FileSystemWatcher("C:\\Users\\Gaetano\\Documents\\Malnati");
             fs.Changed += new FileSystemEventHandler(OnChanged);
             fs.NotifyFilter = NotifyFilters.LastWrite;
             fs.EnableRaisingEvents = true;

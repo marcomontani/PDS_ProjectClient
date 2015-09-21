@@ -5,41 +5,64 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PDS_Client"
         mc:Ignorable="d"
-        Title="Registrazione" Height="300" Width="300">
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="4*"/>
-            <ColumnDefinition Width="5*"/>
-            <ColumnDefinition Width="1*"/>
-            <ColumnDefinition Width="5*"/>
-            <ColumnDefinition Width="4*"/>
+        Title="Registrazione" Height="500" Width="400"
+       ResizeMode="NoResize"
+        BorderThickness="2"
+        WindowStyle="None"
+      >
+    <Grid x:Name="mouse" Background="#1E1E27" MouseDown="mouse_MouseDown">
+        <Grid.ColumnDefinitions >
+            <ColumnDefinition Width="44*"/>
+            <ColumnDefinition Width="137*"/>
+            <ColumnDefinition Width="10*"/>
+            <ColumnDefinition Width="22*"/>
+            <ColumnDefinition Width="139*"/>
+            <ColumnDefinition Width="44*"/>
         </Grid.ColumnDefinitions>
 
         <Grid.RowDefinitions>
-            <RowDefinition Height="3*" />
-            <RowDefinition Height="3*" />
-            <RowDefinition Height="3*" />
-            <RowDefinition Height="3*" />
-            <RowDefinition Height="1*" />
-            <RowDefinition Height="3*" />
-            <RowDefinition Height="3*" />
-            <RowDefinition Height="3*" />
-            <RowDefinition Height="3*" />
-            <RowDefinition Height="3*" />
-            <RowDefinition Height="3*" />
+            <RowDefinition Height="18*" />
+            <RowDefinition Height="56*" />
+            <RowDefinition Height="55*" />
+            <RowDefinition Height="18*" />
+            <RowDefinition Height="12*"/>
+
+            <RowDefinition Height="39*"/>
+            <RowDefinition Height="83*" />
+            <RowDefinition Height="53*" />
+            <RowDefinition Height="28*" />
+            <RowDefinition Height="83*" />
+            <RowDefinition Height="55*" />
         </Grid.RowDefinitions>
+        <Image Source="images/polihub2.png" Grid.Column="1" Margin="32,5,13,4" Grid.Row="1" Grid.ColumnSpan="4" Grid.RowSpan="3" RenderTransformOrigin="0.5,0.5">
+            <Image.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform/>
+                    <SkewTransform/>
+                    <RotateTransform Angle="0.538"/>
+                    <TranslateTransform/>
+                </TransformGroup>
+            </Image.RenderTransform>
+        </Image>
+        <Rectangle Grid.ColumnSpan="6" Grid.Row="9" Margin="0,60,0,0" Grid.RowSpan="2">
+            <Rectangle.Fill>
+                <SolidColorBrush Color="#111221"/>
+            </Rectangle.Fill>
+        </Rectangle>
+        <Label Foreground="AliceBlue" Content="Username" Grid.Row="6" Grid.Column="1" Margin="0,26,0,27" />
+        <TextBox  Grid.Column="3" Grid.Row="6" Name="text_user" Margin="10,26,0,39" Grid.ColumnSpan="2"  />
 
 
-        <Label  Content="Username" Grid.Row="3" Grid.Column="1" />
-        <TextBox Grid.Column="3" Grid.Row="3" Name="text_user"  ></TextBox>
+        <Label  Foreground="AliceBlue" Content="Password" Grid.Row="6" Grid.Column="1" Margin="0,64,0,10" Grid.RowSpan="3" />
+        <PasswordBox Grid.Column="3" Grid.Row="6" Name="text_pass" Margin="10,64,0,0" Grid.ColumnSpan="2"  />
 
 
-        <Label  Content="Password" Grid.Row="5" Grid.Column="1" />
-        <PasswordBox Grid.Column="3" Grid.Row="5" Name="text_pass"  ></PasswordBox>
+        <Button Foreground="AliceBlue" Background="#4B4C5D" Content="Login" Name="btn_login" Grid.Row="9" Grid.Column="1" Click="btn_login_Click" Margin="0,0,0,55" />
+        <Button Foreground="AliceBlue" Background="#4B4C5D" Content="Registrati" Name="btn_register" Grid.Row="9" Grid.Column="4" Margin="0,0,0,55"/>
+        <Label Foreground="Gray" Content="    Progetto Programmazione di Sistema. Prof. Malnati&#xA;Politecnico di Torino . Marco Montani Gaetano Mondelli.  " Grid.Row="5" Grid.RowSpan="2" Grid.ColumnSpan="5" Margin="10,1,33,61" FontSize="10.667" FontWeight="SemiBold" Grid.Column="1" />
+        <Label Foreground="AliceBlue" Content="© PoliHub 2014 - 2015" Grid.Row="9" Grid.RowSpan="2" Grid.ColumnSpan="5" Margin="10,77,33,0" FontSize="10.667" FontWeight="SemiBold" />
+        <Button x:Name="btn_x" Background="#1E1E27" Foreground="AliceBlue" Content="X" Grid.Column="5" HorizontalAlignment="Center" Width="34" VerticalAlignment="Center" BorderThickness="0" Opacity="0.7" FontStretch="Expanded" Margin="10,-1,0,50" FontSize="16" Height="25" Grid.RowSpan="2" Click="btn_x_Click"/>
 
-
-        <Button Content="Login" Name="btn_login" Grid.Row="7" Grid.Column="1" Click="btn_login_Click" />
-        <Button Content="Registrati" Name="btn_register" Grid.Row="7" Grid.Column="3"/>
-        
     </Grid>
+
 </Window>
