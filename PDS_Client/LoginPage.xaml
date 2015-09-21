@@ -38,7 +38,7 @@
         <TextBox Grid.Column="3" Grid.Row="5" Name="text_pass"  ></TextBox>
 
 
-        <Button Content="Login" Name="btn_login" Grid.Row="7" Grid.Column="1" />
+        <Button Content="Login" Name="btn_login" Grid.Row="7" Grid.Column="1" Click="btn_login_Click" />
         <Button Content="Registrati" Name="btn_register" Grid.Row="7" Grid.Column="3"/>
         
     </Grid>

@@ -47,5 +47,12 @@ namespace PDS_Client
             }
             
         }
+
+        private void btn_login_Click(object sender, RoutedEventArgs e)
+        {
+            
+            (new MainWindow()).Show();
+            this.Close();
+        }
     }
 }

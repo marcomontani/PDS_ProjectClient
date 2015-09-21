@@ -9,18 +9,24 @@
     <Grid>
         <TabControl>
             <TabItem Header="La mia cartella" Height="22" VerticalAlignment="Bottom">
-                <Grid Background="#FFE5E5E5">
-                    <Grid.Resources>
-                        <DataTemplate DataType="{x:Type local:FileSystemElement}">
-                            <StackPanel Orientation="Horizontal">
-                                <Image Source="{Binding Path=image}"/>
-                                <Label Content="{Binding Path=name}"/>
-                            </StackPanel>
-                        </DataTemplate>
-                    </Grid.Resources>
-                    
-                    
-                    <ListBox Background="#FFE5E5E5" Name="cwd" ItemsSource="{Binding}" />
+                <Grid Background="WhiteSmoke">
+
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="202*"/>
+                        <ColumnDefinition Width="6*"/>
+                        <ColumnDefinition Width="133*"/>
+                        <ColumnDefinition Width="170*"/>
+                    </Grid.ColumnDefinitions>
+
+
+                    <StackPanel Orientation="Vertical" Name="fs_grid" Grid.ColumnSpan="4">
+
+                    </StackPanel>
+
+                    <!--
+                    <ListBox  Name="cwd" ItemsSource="{Binding}" />
+                    -->
                 </Grid>
             </TabItem>
             <TabItem Header="File Cancellati">
@@ -29,7 +35,10 @@
                 </Grid>
             </TabItem>
             <TabItem Header="Impostazioni">
-                <Grid Background="#FFE5E5E5">
+                <Grid Background="WhiteSmoke">
+                    <StackPanel Orientation="Horizontal" Name="vsp_settings">
+                        <Label>Folder: "C:\Users\Marco\Documents" </Label>
+                    </StackPanel>
 
                 </Grid>
             </TabItem>
