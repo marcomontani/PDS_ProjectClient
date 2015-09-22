@@ -1,22 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.IO;
-using System.Collections;
-
-using System.Diagnostics;
+using System.Net.Sockets;
+using Newtonsoft.Json;
+using System.Text;
 
 namespace PDS_Client
 {
@@ -37,19 +27,39 @@ namespace PDS_Client
     {
         Queue<queueObject> eventsArray = new Queue<queueObject>();
         BindingList<FileSystemElement> currentWorkDirectory = new BindingList<FileSystemElement>();
+        Socket s;
         
-
         public MainWindow()
         {
             InitializeComponent();
-            Debug.WriteLine("Fil2e: ");
+            syncFolder();
             watchFolder();
-            Debug.WriteLine("File: ");
+            
             addCurrentFoderInfo();
 
             this.DataContext = currentWorkDirectory;
         }
 
+        private void syncFolder()
+        {
+            s.Send(BitConverter.GetBytes(8)); 
+            byte[] buffer = new byte[1024];
+            
+            s.Receive(buffer, 1024, SocketFlags.None);
+            string serverFolderDescription = Encoding.ASCII.GetString(buffer);
+            // now in the string we have the JSON string description. it is "folder: [{"path":"...", "name":"......"}]"
+
+            List<JSON_Folder_Items> items = JsonConvert.DeserializeObject<List<JSON_Folder_Items>>(serverFolderDescription);
+            // todo : check the filenames and compare them with the selected folder. 
+            // todo: add date of last update and compare it with date of last modify
+
+        }
+
+        public void setSocket(Socket sock)
+        {
+            if (!sock.Connected) throw new SocketException();
+            s = sock;
+        }
 
         private void watchFolder()
         {
