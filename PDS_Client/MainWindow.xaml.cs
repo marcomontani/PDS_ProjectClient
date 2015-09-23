@@ -77,6 +77,30 @@ namespace PDS_Client
         }
 
 
+        private void sendFileToServer(string path)
+        {
+            s.Send(BitConverter.GetBytes(2)); // UPLOAD FILE
+            s.Send(Encoding.ASCII.GetBytes(path));
+
+            byte[] inBuff = new byte[1024];
+            s.Receive(inBuff);
+            if (Encoding.ASCII.GetString(inBuff) != "OK") throw new Exception("error: filename sent but error was returned");
+
+            long dimension = (new FileInfo(path)).Length;
+            if (dimension > Int32.MaxValue) throw new Exception("error: file dimension too big! > 32 bit");
+            int dim = (int)dimension;
+
+            s.Send(BitConverter.GetBytes(dim));
+            s.Send(File.ReadAllBytes(path));
+
+            s.Receive(inBuff);
+            if (Encoding.ASCII.GetString(inBuff) != "OK") throw new Exception("error: file not uploaded correctly");
+
+            // todo: calculate and send sha1 checksum
+        }
+
+        
+
         public void setSocket(Socket sock)
         {
             if (!sock.Connected) throw new SocketException();
