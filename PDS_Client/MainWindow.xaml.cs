@@ -15,7 +15,6 @@ namespace PDS_Client
     /// </summary>
     /// 
 
-
     struct queueObject
     {
         public string file;
@@ -28,6 +27,7 @@ namespace PDS_Client
         Queue<queueObject> eventsArray = new Queue<queueObject>();
         BindingList<FileSystemElement> currentWorkDirectory = new BindingList<FileSystemElement>();
         Socket s;
+        string BASE_DIRECTORY = "C:\\Users\\Marco\\Documents\\PDS_Folder";
         
         public MainWindow()
         {
@@ -42,7 +42,7 @@ namespace PDS_Client
 
         private void syncFolder()
         {
-            s.Send(BitConverter.GetBytes(8)); 
+            s.Send(BitConverter.GetBytes(8));  // == ENUM.getUserFiles
             byte[] buffer = new byte[1024];
             
             s.Receive(buffer, 1024, SocketFlags.None);
@@ -50,10 +50,32 @@ namespace PDS_Client
             // now in the string we have the JSON string description. it is "folder: [{"path":"...", "name":"......"}]"
 
             List<JSON_Folder_Items> items = JsonConvert.DeserializeObject<List<JSON_Folder_Items>>(serverFolderDescription);
-            // todo : check the filenames and compare them with the selected folder. 
             // todo: add date of last update and compare it with date of last modify
+            checkFileExists(BASE_DIRECTORY, items);
 
         }
+
+        private void checkFileExists(string basePath,  List<JSON_Folder_Items> items)
+        {
+            foreach (string p in System.IO.Directory.GetDirectories(basePath)) checkFileExists(p, items);
+
+            foreach (string file in System.IO.Directory.GetFiles(basePath)) {
+                JSON_Folder_Items item = new JSON_Folder_Items();
+                item.name = file;
+                item.path = basePath;
+
+
+                if (!items.Contains(item))
+                {
+                    // todo: send it to the server
+                }
+
+            }
+
+
+
+        }
+
 
         public void setSocket(Socket sock)
         {
@@ -63,7 +85,7 @@ namespace PDS_Client
 
         private void watchFolder()
         {
-            FileSystemWatcher fs = new FileSystemWatcher("C:\\Users\\Gaetano\\Documents\\Malnati");
+            FileSystemWatcher fs = new FileSystemWatcher(BASE_DIRECTORY);
             fs.Changed += new FileSystemEventHandler(OnChanged);
             fs.NotifyFilter = NotifyFilters.LastWrite;
             fs.EnableRaisingEvents = true;
