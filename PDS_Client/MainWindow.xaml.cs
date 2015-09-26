@@ -7,6 +7,7 @@ using System.IO;
 using System.Net.Sockets;
 using Newtonsoft.Json;
 using System.Text;
+using System.Security.Cryptography;
 
 namespace PDS_Client
 {
@@ -65,11 +66,7 @@ namespace PDS_Client
                 item.path = basePath;
 
 
-                if (!items.Contains(item))
-                {
-                    // todo: send it to the server
-                }
-
+                if (!items.Contains(item)) sendFileToServer(basePath);
             }
 
 
@@ -97,6 +94,9 @@ namespace PDS_Client
             if (Encoding.ASCII.GetString(inBuff) != "OK") throw new Exception("error: file not uploaded correctly");
 
             // todo: calculate and send sha1 checksum
+            SHA1 shaProvider = SHA1.Create();
+            shaProvider.ComputeHash(new FileStream(path, FileMode.Open));
+            s.Send(shaProvider.Hash);
         }
 
         
@@ -122,7 +122,6 @@ namespace PDS_Client
             MessageBox.Show("File: " + e.FullPath + " " + e.ChangeType);
             queueObject q; q.file = e.FullPath; q.type = e.ChangeType;
             if (!this.eventsArray.Contains(q)) eventsArray.Enqueue(q);
-            
         }
 
 
@@ -152,11 +151,7 @@ namespace PDS_Client
             labcab2.Content = "FILE";
             Cabodi.Children.Add(labcab2);
 
-
             g.Children.Add(Cabodi);
-
-
-
         }
 
     }

@@ -47,7 +47,6 @@ namespace PDS_Client
             catch(SocketException se)
             {
                 MessageBox.Show(se.Message);
-                // todo: send a popup ( "impossibile connettersi al server " )
             }
             
         }
