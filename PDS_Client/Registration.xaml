@@ -16,7 +16,8 @@
             <ColumnDefinition Width="137*"/>
             <ColumnDefinition Width="10*"/>
             <ColumnDefinition Width="22*"/>
-            <ColumnDefinition Width="139*"/>
+            <ColumnDefinition Width="112*"/>
+            <ColumnDefinition Width="27*"/>
             <ColumnDefinition Width="44*"/>
         </Grid.ColumnDefinitions>
 
@@ -44,16 +45,22 @@
                 </TransformGroup>
             </Image.RenderTransform>
         </Image>
-        <Rectangle Grid.ColumnSpan="6" Grid.Row="9" Margin="0,60,0,0" Grid.RowSpan="2">
+        <Rectangle Grid.ColumnSpan="7" Grid.Row="9" Margin="0,59,0,1" Grid.RowSpan="2">
             <Rectangle.Fill>
                 <SolidColorBrush Color="#111221"/>
             </Rectangle.Fill>
         </Rectangle>
-        <Label Foreground="AliceBlue" Content="INIZIAMO" Grid.Row="1" Grid.Column="1" Margin="44,51,9,20" Grid.ColumnSpan="5" FontSize="48" Grid.RowSpan="5" />
-        <Label Foreground="AliceBlue" Content="© PoliHub 2014 - 2015" Grid.Row="9" Grid.RowSpan="2" Grid.ColumnSpan="5" Margin="10,77,33,0" FontSize="10.667" FontWeight="SemiBold" />
-        <Button x:Name="btn_x" Background="#1E1E27" Foreground="AliceBlue" Content="X" Grid.Column="5" HorizontalAlignment="Center" Width="34" VerticalAlignment="Center" BorderThickness="0" Opacity="0.7" FontStretch="Expanded" Margin="10,0,0,0" Click="btn_x_Click_1"/>
-        <Rectangle Grid.ColumnSpan="6" Grid.Row="5" Margin="1,13,-1,23" Fill="WhiteSmoke" Grid.RowSpan="5"/>
-        <Label Foreground="Black" Content="PoliHuB mantiene i tuoi porno&#xD;&#xA;&#x9;       al sicuro&#xD;&#xA; &#xD;&#xA;&#xD;&#xA;&#xA;" Grid.Row="5" Grid.RowSpan="4" Grid.ColumnSpan="6" Margin="22,35,-2,1" FontSize="21.333" FontWeight="SemiBold" />
+        <Label Foreground="AliceBlue" Content="INIZIAMO" Grid.Row="1" Grid.Column="1" Margin="44,51,9,20" Grid.ColumnSpan="6" FontSize="48" Grid.RowSpan="5" />
+        <Label x:Name="lbl_wizard_footer" Foreground="AliceBlue" Content="© PoliHub 2014 - 2015" Grid.Row="9" Grid.RowSpan="2" Grid.ColumnSpan="5" Margin="10,77,6,0" FontSize="10.667" FontWeight="SemiBold" />
+        <Button x:Name="btn_x" Background="#1E1E27" Foreground="AliceBlue" Content="X" Grid.Column="6" HorizontalAlignment="Center" Width="34" VerticalAlignment="Center" BorderThickness="0" Opacity="0.7" FontStretch="Expanded" Margin="10,0,0,0" Click="btn_x_Click_1"/>
+        <Rectangle Grid.ColumnSpan="7" Grid.Row="5" Margin="0,13,0,23" Fill="WhiteSmoke" Grid.RowSpan="5"/>
+        <Label x:Name="lbl_wizard" Foreground="Black" Content="Inserisci il tuo username" Grid.Row="6" Grid.ColumnSpan="7" Margin="0,13,0,23" FontSize="21.333" FontWeight="SemiBold" HorizontalAlignment="Center" />
+        <Button Foreground="AliceBlue" Background="#4B4C5D" Content="Avanti" x:Name="btn_next" Grid.Row="9" Grid.Column="1" Click="btn_next_Click" Margin="91,8,53,47" Grid.ColumnSpan="4" />
+        <TextBox x:Name="txt_wizard" HorizontalAlignment="Left" Height="30" Margin="41,7,0,0" Grid.Row="7" TextWrapping="Wrap" Text="Username" VerticalAlignment="Top" Width="308" Grid.ColumnSpan="6" BorderThickness="0,0,0,2" Background="WhiteSmoke" FontSize="18.667" TextAlignment="Center" GotFocus="txt_wizard_GotFocus" FontStyle="Italic" MaxLines="1" FontWeight="Light"/>
+        <Ellipse x:Name="circle1" Fill="WhiteSmoke" HorizontalAlignment="Left" Height="13" Margin="105,37,0,0" Grid.Row="10" VerticalAlignment="Top" Width="12" Grid.Column="4" Stroke="WhiteSmoke" Grid.ColumnSpan="2" MouseEnter="elps_wizards_MouseOver" MouseLeave="elps_wizards_MouseLeave" MouseLeftButtonDown="elps_mouse_MouseDown"/>
+        <Ellipse x:Name="circle2" Fill="#FF111221" HorizontalAlignment="Left" Height="13" Margin="8,37,0,0" Grid.Row="10" VerticalAlignment="Top" Width="12" Grid.Column="5" Stroke="WhiteSmoke" MouseEnter="elps_wizards_MouseOver" MouseLeave="elps_wizards_MouseLeave" MouseLeftButtonDown="elps_mouse_MouseDown"/>
+        <Ellipse x:Name="circle3" Fill="#FF111221" HorizontalAlignment="Left" Height="13" Margin="24,37,0,0" Grid.Row="10" VerticalAlignment="Top" Width="12" Grid.Column="5" Stroke="WhiteSmoke" Grid.ColumnSpan="2" MouseEnter="elps_wizards_MouseOver" MouseLeave="elps_wizards_MouseLeave" MouseLeftButtonDown="elps_mouse_MouseDown" />
+        <Ellipse x:Name="circle4" Fill="#FF111221" HorizontalAlignment="Left" Height="13" Margin="12,37,0,0" Grid.Row="10" VerticalAlignment="Top" Width="12" Grid.Column="6" Stroke="WhiteSmoke" MouseEnter="elps_wizards_MouseOver" MouseLeave="elps_wizards_MouseLeave" MouseLeftButtonDown="elps_mouse_MouseDown"/>
 
     </Grid>
 
