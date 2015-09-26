@@ -55,16 +55,18 @@ namespace PDS_Client
         private void btn_login_Click(object sender, RoutedEventArgs e)
         {
 
-            //if (s == null) createSocket(); // the socket is already connected
+            if (s == null) createSocket(); // the socket is already connected
             string username = ((TextBox)this.FindName("text_user")).Text;
             string password = ((PasswordBox)this.FindName("text_pass")).Password;
 
-            string message = "LOGIN " + username + " " + password;
-           // s.Send(Encoding.ASCII.GetBytes("ciao"));
+            string message = "LOGIN " + username + " " + password; // todo: substitute LOGIN with the correct int
+            s.Send(Encoding.ASCII.GetBytes(message));
 
             // todo: wait for answer. if ok proceed
 
-            (new MainWindow()).Show();
+            MainWindow main = new MainWindow();
+            main.setSocket(s);
+            main.Show();
             this.Close();
         }
 
