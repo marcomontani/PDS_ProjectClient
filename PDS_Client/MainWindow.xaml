@@ -5,43 +5,57 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PDS_Client"
         mc:Ignorable="d"
-        Title="BackupFolder" Height="350" Width="525">
-    <Grid>
-        <TabControl>
-            <TabItem Header="La mia cartella" Height="22" VerticalAlignment="Bottom">
-                <Grid Background="WhiteSmoke">
+        Title="BackupFolder" Height="500" Width="600"
+        WindowStyle="None"
+         ResizeMode="NoResize"
+        BorderThickness="2">
+    <Grid x:Name="fs_container"
+          MouseDown="mouse_MouseDown"
+          Margin="0, 0, 0, 0"
+          Background="WhiteSmoke"
+          ClipToBounds="True">
+
+        <Grid.Resources>
+            <Storyboard x:Name="openDetails"
+                        x:Key="key_details_animation">
+                <DoubleAnimation Storyboard.TargetName="details_container"
+                                 Storyboard.TargetProperty="Width"
+                                 From="0"
+                                 To="177"
+                                 AutoReverse="False">
+                </DoubleAnimation>
+            </Storyboard>
+        </Grid.Resources>
+        
+        <Grid.RowDefinitions>
+            <RowDefinition Height="15*"/>
+            <RowDefinition Height="70*"/>
+            <RowDefinition Height="15*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="70*"/>
+            <ColumnDefinition Width="30*"/>
+
+        </Grid.ColumnDefinitions>
 
 
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="202*"/>
-                        <ColumnDefinition Width="6*"/>
-                        <ColumnDefinition Width="133*"/>
-                        <ColumnDefinition Width="170*"/>
-                    </Grid.ColumnDefinitions>
+        <Rectangle x:Name="rect_header" Grid.Row="0" Grid.Column="0" Fill="#1E1E27" Margin="0,0,0,0" Grid.ColumnSpan="2"/>
+        <StackPanel Orientation="Vertical" Name="fs_grid" Grid.ColumnSpan="2" Grid.Row="1" />
+        <Rectangle x:Name="rect_footer" Grid.Row="2" Fill="#1E1E27" Grid.ColumnSpan="2"/>
+        
+        
+        <Button x:Name="btn_x" Content="X" Grid.Column="1" HorizontalAlignment="Left" Margin="152,0,0,0" VerticalAlignment="Top" Width="27" Height="27" Background="#FF1E1E27" Foreground="WhiteSmoke" BorderThickness="0" Click="mouse_x_click"/>
+        <Label Foreground="AliceBlue" Content="© PoliHub 2014 - 2015" Grid.Row="2" Grid.RowSpan="1" Grid.ColumnSpan="2" Margin="0,50,0,0" FontSize="10.667" FontWeight="SemiBold" />
 
-
-                    <StackPanel Orientation="Vertical" Name="fs_grid" Grid.ColumnSpan="4">
-
-                    </StackPanel>
-
-                    <!--
-                    <ListBox  Name="cwd" ItemsSource="{Binding}" />
-                    -->
-                </Grid>
-            </TabItem>
-            <TabItem Header="File Cancellati">
-                <Grid Background="#FFE5E5E5">
-
-                </Grid>
-            </TabItem>
-            <TabItem Header="Impostazioni">
-                <Grid Background="WhiteSmoke">
-                    <StackPanel Orientation="Horizontal" Name="vsp_settings">
-                        <Label>Folder: "C:\Users\Marco\Documents\PDS_Folder" </Label>
-                    </StackPanel>
-
-                </Grid>
-            </TabItem>
-        </TabControl>
+        <DockPanel Grid.Column="1" Grid.Row="1" x:Name="details_container" Visibility="Collapsed">
+            <Border BorderThickness="2,0,0,0" Background="#FF1E1E27">
+                <StackPanel x:Name="panel_details" Background="WhiteSmoke" Margin="2, 0,0, 0" Orientation="Vertical">
+                    <Button x:Name="btn_close_versions" Content="X" BorderThickness="0" Background="WhiteSmoke" HorizontalAlignment="Right" Click="btn_close_versions_Click" ></Button>
+                    <Label Content="VERSIONI" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="24" FontStyle="Italic" TextOptions.TextFormattingMode="Display" FontWeight="SemiBold"/>
+                </StackPanel>
+            </Border>
+            
+        </DockPanel>
+        
     </Grid>
 </Window>

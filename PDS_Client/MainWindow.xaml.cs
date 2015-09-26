@@ -2,12 +2,16 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Media;
 using System.Windows.Controls;
 using System.IO;
 using System.Net.Sockets;
 using Newtonsoft.Json;
 using System.Text;
 using System.Security.Cryptography;
+using System.Windows.Media.Imaging;
+using System.Windows.Input;
+using System.Windows.Media.Animation;
 
 namespace PDS_Client
 {
@@ -33,10 +37,10 @@ namespace PDS_Client
         public MainWindow()
         {
             InitializeComponent();
-            syncFolder();
+            //syncFolder();
             watchFolder();
             
-            addCurrentFoderInfo();
+            addCurrentFoderInfo(BASE_DIRECTORY);
 
             this.DataContext = currentWorkDirectory;
         }
@@ -103,7 +107,7 @@ namespace PDS_Client
 
         public void setSocket(Socket sock)
         {
-            if (!sock.Connected) throw new SocketException();
+           // if (!sock.Connected) throw new SocketException();
             s = sock;
         }
 
@@ -124,35 +128,103 @@ namespace PDS_Client
             if (!this.eventsArray.Contains(q)) eventsArray.Enqueue(q);
         }
 
-
-        private void addCurrentFoderInfo()
+        private void mouse_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            StackPanel g = (StackPanel)this.FindName("fs_grid");
-            StackPanel Malnati = new StackPanel();
-            Label labmal = new Label();
-            labmal.Content = "MALNATI";
-            Malnati.Orientation = Orientation.Horizontal;
-            Malnati.Children.Add(labmal);
-
-            Label labmal2 = new Label();
-            labmal2.Content = "FILE";            
-            Malnati.Children.Add(labmal2);
-
-
-            g.Children.Add(Malnati);
-
-
-            StackPanel Cabodi = new StackPanel();
-            Label labcab = new Label();
-            labcab.Content = "CABODI";
-            Cabodi.Orientation = Orientation.Horizontal;
-            Cabodi.Children.Add(labcab);
-            Label labcab2 = new Label();
-            labcab2.Content = "FILE";
-            Cabodi.Children.Add(labcab2);
-
-            g.Children.Add(Cabodi);
+            try {
+                this.DragMove();
+            }catch(InvalidOperationException ioe)
+            {
+                // this means that someone has already cought the mousedown event. probably i did not want to move the window
+            }
         }
 
+        private void mouse_x_click(object sender, RoutedEventArgs e)
+        {
+            // todo: send to try bar
+            this.Close();
+        }
+
+
+        private void MouseFolderButtonDownHandler(object sender, MouseButtonEventArgs e)
+        {
+            ((StackPanel)this.FindName("fs_grid")).Children.Clear(); // remove all childs
+
+            Panel p = (Panel)sender;
+            Label lblDirectory = (Label)p.Children[1];            
+            string newDir = (string)(lblDirectory).Content;
+            addCurrentFoderInfo(newDir);
+        }
+
+
+        private void MouseFileButtonDownHandler(object sender, MouseButtonEventArgs e) {
+            Grid.SetColumnSpan((UIElement)this.FindName("fs_grid"), 1);
+            ((UIElement)this.FindName("details_container")).Visibility = Visibility.Visible;
+            Storyboard sb = (Storyboard)((Grid)this.FindName("fs_container")).FindResource("key_details_animation");
+            sb.Begin();
+        }
+
+
+
+        private void addCurrentFoderInfo(string path)
+        {
+            StackPanel g = (StackPanel)this.FindName("fs_grid");
+            
+            foreach (string dir in Directory.GetDirectories(path))
+            {
+                StackPanel panel = new StackPanel();
+                panel.VerticalAlignment = VerticalAlignment.Center;
+                panel.Orientation = Orientation.Horizontal;
+                panel.MouseLeftButtonDown += MouseFolderButtonDownHandler;
+               
+
+                Image img_folder = new Image();
+                img_folder.Source = new BitmapImage(new Uri(@"\images\folderIcon.png", UriKind.RelativeOrAbsolute));
+                img_folder.Stretch = Stretch.None;
+                
+                panel.Children.Add(img_folder);
+
+
+                Label lbl_dir_name = new Label();
+                lbl_dir_name.Name = "lbl_folder_name";
+                lbl_dir_name.Content = dir;
+                panel.Children.Add(lbl_dir_name);
+
+                g.Children.Add(panel);
+            }
+
+
+
+            foreach (string file in Directory.GetFiles(path))
+            {
+                StackPanel panel = new StackPanel();
+                panel.VerticalAlignment = VerticalAlignment.Center;
+                panel.Orientation = Orientation.Horizontal;
+                panel.MouseLeftButtonDown += MouseFileButtonDownHandler;
+
+                Image img_file = new Image();
+                img_file.Source = new BitmapImage(new Uri(@"\images\fileIcon.png", UriKind.RelativeOrAbsolute));
+                img_file.Stretch = Stretch.None;
+
+                panel.Children.Add(img_file);
+
+
+                Label lbl_file_name = new Label();
+                lbl_file_name.Content = file;
+                panel.Children.Add(lbl_file_name);
+
+                g.Children.Add(panel);
+            }
+        }
+
+        private void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
+
+        private void btn_close_versions_Click(object sender, RoutedEventArgs e)
+        {
+            ((UIElement)this.FindName("details_container")).Visibility = Visibility.Collapsed;
+            Grid.SetColumnSpan((UIElement)this.FindName("fs_grid"), 2);
+        }
     }
 }

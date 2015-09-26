@@ -41,7 +41,7 @@ namespace PDS_Client
                 s = new Socket(SocketType.Stream, ProtocolType.Tcp);
                
                 IPAddress sAddr = new IPAddress(2130706433); //  127.0.0.1 --> 2130706433
-                s.Connect(sAddr,7000);
+                //s.Connect(sAddr,7000);
                 if (!s.Connected) throw new SocketException();
             }
             catch(SocketException se)
@@ -54,12 +54,13 @@ namespace PDS_Client
         private void btn_login_Click(object sender, RoutedEventArgs e)
         {
 
+           
             if (s == null) createSocket(); // the socket is already connected
             string username = ((TextBox)this.FindName("text_user")).Text;
             string password = ((PasswordBox)this.FindName("text_pass")).Password;
 
             string message = "LOGIN " + username + " " + password; // todo: substitute LOGIN with the correct int
-            s.Send(Encoding.ASCII.GetBytes(message));
+            //s.Send(Encoding.ASCII.GetBytes(message));
 
             // todo: wait for answer. if ok proceed
 
