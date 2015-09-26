@@ -58,7 +58,7 @@
 
 
         <Button Foreground="AliceBlue" Background="#4B4C5D" Content="Login" Name="btn_login" Grid.Row="9" Grid.Column="1" Click="btn_login_Click" Margin="0,0,0,55" />
-        <Button Foreground="AliceBlue" Background="#4B4C5D" Content="Registrati" Name="btn_register" Grid.Row="9" Grid.Column="4" Margin="0,0,0,55"/>
+        <Button Foreground="AliceBlue" Background="#4B4C5D" Content="Registrati" Name="btn_register" Grid.Row="9" Grid.Column="4" Margin="0,0,0,55" Click="btn_register_Click"/>
         <Label Foreground="Gray" Content="    Progetto Programmazione di Sistema. Prof. Malnati&#xA;Politecnico di Torino . Marco Montani Gaetano Mondelli.  " Grid.Row="5" Grid.RowSpan="2" Grid.ColumnSpan="5" Margin="10,1,33,61" FontSize="10.667" FontWeight="SemiBold" Grid.Column="1" />
         <Label Foreground="AliceBlue" Content="© PoliHub 2014 - 2015" Grid.Row="9" Grid.RowSpan="2" Grid.ColumnSpan="5" Margin="10,77,33,0" FontSize="10.667" FontWeight="SemiBold" />
         <Button x:Name="btn_x" Background="#1E1E27" Foreground="AliceBlue" Content="X" Grid.Column="5" HorizontalAlignment="Center" Width="34" VerticalAlignment="Center" BorderThickness="0" Opacity="0.7" FontStretch="Expanded" Margin="10,0,0,0" Click="btn_x_Click_1"/>

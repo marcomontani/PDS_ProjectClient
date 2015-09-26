@@ -78,5 +78,12 @@ namespace PDS_Client
         {
             this.Close();
         }
+
+        private void btn_register_Click(object sender, RoutedEventArgs e)
+        {
+            Registration reg = new Registration();
+            reg.Show();
+            this.Close();
+        }
     }
 }
