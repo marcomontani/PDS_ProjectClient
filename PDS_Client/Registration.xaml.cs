@@ -21,12 +21,12 @@ namespace PDS_Client
     /// <summary>
     /// Logica di interazione per Window1.xaml
     /// </summary>
-    public partial class Window1 : Window
+    public partial class Registration : Window
     {
 
         Socket s = null;
 
-        public Window1()
+        public Registration()
         {
             InitializeComponent();
 
