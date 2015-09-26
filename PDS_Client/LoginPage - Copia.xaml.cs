@@ -47,6 +47,7 @@ namespace PDS_Client
             catch(SocketException se)
             {
                 MessageBox.Show(se.Message);
+                // todo: send a popup ( "impossibile connettersi al server " )
             }
             
         }
@@ -54,18 +55,16 @@ namespace PDS_Client
         private void btn_login_Click(object sender, RoutedEventArgs e)
         {
 
-            if (s == null) createSocket(); // the socket is already connected
+            //if (s == null) createSocket(); // the socket is already connected
             string username = ((TextBox)this.FindName("text_user")).Text;
             string password = ((PasswordBox)this.FindName("text_pass")).Password;
 
-            string message = "LOGIN " + username + " " + password; // todo: substitute LOGIN with the correct int
-            s.Send(Encoding.ASCII.GetBytes(message));
+            string message = "LOGIN " + username + " " + password;
+           // s.Send(Encoding.ASCII.GetBytes("ciao"));
 
             // todo: wait for answer. if ok proceed
 
-            MainWindow main = new MainWindow();
-            main.setSocket(s);
-            main.Show();
+            (new MainWindow()).Show();
             this.Close();
         }
 
