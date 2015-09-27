@@ -12,6 +12,7 @@ using System.Security.Cryptography;
 using System.Windows.Media.Imaging;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
+using System.Windows.Shapes;
 
 namespace PDS_Client
 {
@@ -32,14 +33,15 @@ namespace PDS_Client
         Queue<queueObject> eventsArray = new Queue<queueObject>();
         BindingList<FileSystemElement> currentWorkDirectory = new BindingList<FileSystemElement>();
         Socket s;
-        string BASE_DIRECTORY = "C:\\Users\\Marco\\Documents\\PDS_Folder";
+        int flag;
+        string BASE_DIRECTORY = "C:\\Users\\Gaetano\\Documents\\malnati";
         
         public MainWindow()
         {
             InitializeComponent();
             //syncFolder();
             watchFolder();
-            
+            flag = 0;
             addCurrentFoderInfo(BASE_DIRECTORY);
 
             this.DataContext = currentWorkDirectory;
@@ -130,6 +132,8 @@ namespace PDS_Client
 
         private void mouse_MouseDown(object sender, MouseButtonEventArgs e)
         {
+         
+            //if (sender.GetType().FullName=="StackPanel") M
             try {
                 this.DragMove();
             }catch(InvalidOperationException ioe)
@@ -156,11 +160,13 @@ namespace PDS_Client
         }
 
 
-        private void MouseFileButtonDownHandler(object sender, MouseButtonEventArgs e) {
+        private void MouseFileButtonDownHandler(object sender, RoutedEventArgs e) {
             Grid.SetColumnSpan((UIElement)this.FindName("fs_grid"), 1);
             ((UIElement)this.FindName("details_container")).Visibility = Visibility.Visible;
             Storyboard sb = (Storyboard)((Grid)this.FindName("fs_container")).FindResource("key_details_animation");
             sb.Begin();
+            e.Handled = true;
+            flag = 1;
         }
 
 
@@ -172,9 +178,10 @@ namespace PDS_Client
             foreach (string dir in Directory.GetDirectories(path))
             {
                 StackPanel panel = new StackPanel();
+                panel.Name = "folder_panel";
                 panel.VerticalAlignment = VerticalAlignment.Center;
                 panel.Orientation = Orientation.Horizontal;
-                panel.MouseLeftButtonDown += MouseFolderButtonDownHandler;
+                //panel.MouseLeftButtonDown += MouseFolderButtonDownHandler;
                
 
                 Image img_folder = new Image();
@@ -189,6 +196,8 @@ namespace PDS_Client
                 lbl_dir_name.Content = dir;
                 panel.Children.Add(lbl_dir_name);
 
+
+                
                 g.Children.Add(panel);
             }
 
@@ -196,10 +205,12 @@ namespace PDS_Client
 
             foreach (string file in Directory.GetFiles(path))
             {
+               
                 StackPanel panel = new StackPanel();
+                panel.Name = "file_panel";
                 panel.VerticalAlignment = VerticalAlignment.Center;
                 panel.Orientation = Orientation.Horizontal;
-                panel.MouseLeftButtonDown += MouseFileButtonDownHandler;
+                //panel.MouseLeftButtonDown += MouseFileButtonDownHandler;
 
                 Image img_file = new Image();
                 img_file.Source = new BitmapImage(new Uri(@"\images\fileIcon.png", UriKind.RelativeOrAbsolute));
@@ -211,20 +222,31 @@ namespace PDS_Client
                 Label lbl_file_name = new Label();
                 lbl_file_name.Content = file;
                 panel.Children.Add(lbl_file_name);
-
+           
+                panel.MouseLeftButtonDown += MouseFileButtonDownHandler;
                 g.Children.Add(panel);
+            }
+
+        }
+
+   
+        private void closeVersions(object sender, MouseButtonEventArgs e)
+        {
+            if (flag==1)
+            {
+                Storyboard sb = (Storyboard)((Grid)this.FindName("fs_container")).FindResource("key_details_animation_close");
+                sb.Begin();
+                sb.Completed += closeSidebar;
+                
             }
         }
 
-        private void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-
-        }
-
-        private void btn_close_versions_Click(object sender, RoutedEventArgs e)
+        void closeSidebar(object sender, EventArgs e)
         {
             ((UIElement)this.FindName("details_container")).Visibility = Visibility.Collapsed;
             Grid.SetColumnSpan((UIElement)this.FindName("fs_grid"), 2);
+            flag = 0;
         }
+     
     }
 }
