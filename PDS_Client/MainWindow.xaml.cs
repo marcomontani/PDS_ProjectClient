@@ -34,6 +34,7 @@ namespace PDS_Client
         BindingList<FileSystemElement> currentWorkDirectory = new BindingList<FileSystemElement>();
         Socket s;
         int flag;
+        int rowElements = 9;
         string BASE_DIRECTORY = "C:\\Users\\Gaetano\\Documents\\malnati";
         
         public MainWindow()
@@ -156,7 +157,7 @@ namespace PDS_Client
             Panel p = (Panel)sender;
             Label lblDirectory = (Label)p.Children[1];            
             string newDir = (string)(lblDirectory).Content;
-            addCurrentFoderInfo(newDir);
+            addCurrentFoderInfo(BASE_DIRECTORY + "\\" + newDir);
         }
 
 
@@ -164,23 +165,40 @@ namespace PDS_Client
             Grid.SetColumnSpan((UIElement)this.FindName("fs_grid"), 1);
             ((UIElement)this.FindName("details_container")).Visibility = Visibility.Visible;
             Storyboard sb = (Storyboard)((Grid)this.FindName("fs_container")).FindResource("key_details_animation");
+            sb.Completed += (object s, EventArgs ev) => {
+                rowElements = 5;
+                ((StackPanel)this.FindName("fs_grid")).Children.Clear();
+                addCurrentFoderInfo(BASE_DIRECTORY);
+            };
             sb.Begin();
             e.Handled = true;
             flag = 1;
         }
 
-
+       
 
         private void addCurrentFoderInfo(string path)
         {
             StackPanel g = (StackPanel)this.FindName("fs_grid");
+            StackPanel hpanel=null;
+            int i = rowElements;
             
             foreach (string dir in Directory.GetDirectories(path))
             {
+                if ((i % rowElements) == 0) {
+                    hpanel = new StackPanel();
+                    hpanel.Name = "row_panel_" + i;
+                    hpanel.VerticalAlignment = VerticalAlignment.Center;
+                    hpanel.Orientation = Orientation.Horizontal;
+                        };
+              
+                i++;
                 StackPanel panel = new StackPanel();
+                panel.Width = 70;
                 panel.Name = "folder_panel";
                 panel.VerticalAlignment = VerticalAlignment.Center;
-                panel.Orientation = Orientation.Horizontal;
+                panel.HorizontalAlignment = HorizontalAlignment.Center;
+                panel.Orientation = Orientation.Vertical;
                 panel.MouseLeftButtonDown += MouseFolderButtonDownHandler;
                
 
@@ -193,13 +211,15 @@ namespace PDS_Client
 
 
                 Label lbl_dir_name = new Label();
+                lbl_dir_name.Width = 50;
+       
                 lbl_dir_name.Name = "lbl_folder_name";
-                lbl_dir_name.Content = dir;
+                lbl_dir_name.Content = dir.Split('\\')[dir.Split('\\').Length-1];
                 panel.Children.Add(lbl_dir_name);
 
 
-                
-                g.Children.Add(panel);
+                hpanel.Children.Add(panel);
+                if (((i-1) % rowElements) == 0)g.Children.Add(hpanel);
             }
 
 
@@ -212,10 +232,9 @@ namespace PDS_Client
                 panel.VerticalAlignment = VerticalAlignment.Center;
                 panel.Orientation = Orientation.Horizontal;
                 panel.MouseLeftButtonDown += MouseFileButtonDownHandler;
-
+                panel.Width = 150;
                 Image img_file = new Image();
                 img_file.Source = new BitmapImage(new Uri(@"\images\fileIcon.png", UriKind.RelativeOrAbsolute));
-              //  img_file.Stretch = Stretch.None;
                 img_file.Width = 50;
                 img_file.Height = 50;
 
@@ -223,7 +242,7 @@ namespace PDS_Client
 
 
                 Label lbl_file_name = new Label();
-                lbl_file_name.Content = file;
+                lbl_file_name.Content = file.Split('\\')[file.Split('\\').Length - 1]; ;
                 panel.Children.Add(lbl_file_name);
            
        
@@ -238,8 +257,9 @@ namespace PDS_Client
             if (flag==1)
             {
                 Storyboard sb = (Storyboard)((Grid)this.FindName("fs_container")).FindResource("key_details_animation_close");
-                sb.Begin();
                 sb.Completed += closeSidebar;
+                sb.Begin();
+                
                 
             }
         }
@@ -248,6 +268,9 @@ namespace PDS_Client
         {
             ((UIElement)this.FindName("details_container")).Visibility = Visibility.Collapsed;
             Grid.SetColumnSpan((UIElement)this.FindName("fs_grid"), 2);
+            rowElements = 10;
+            ((StackPanel)this.FindName("fs_grid")).Children.Clear();
+            addCurrentFoderInfo(BASE_DIRECTORY);
             flag = 0;
         }
      
