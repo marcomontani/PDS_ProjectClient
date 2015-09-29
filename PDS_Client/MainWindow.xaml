@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PDS_Client"
         mc:Ignorable="d"
-        Title="BackupFolder" Height="500" Width="600"
+        Title="BackupFolder" Height="800" Width="1000"
         WindowStyle="None"
          ResizeMode="NoResize"
         BorderThickness="2">
@@ -32,11 +32,11 @@
             </Storyboard>
 
         </Grid.Resources>
-        
+
         <Grid.RowDefinitions>
-            <RowDefinition Height="15*"/>
-            <RowDefinition Height="70*"/>
-            <RowDefinition Height="15*"/>
+            <RowDefinition Height="59*"/>
+            <RowDefinition Height="711*"/>
+            <RowDefinition Height="26*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="70*"/>
@@ -45,12 +45,10 @@
         </Grid.ColumnDefinitions>
 
         <StackPanel Orientation="Vertical"  Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" x:Name="fs_grid"  MouseLeftButtonDown="closeVersions" Background="WhiteSmoke" />
-        <Rectangle x:Name="rect_header" Grid.Row="0" Grid.Column="0" Fill="#1E1E27" Margin="0,0,0,0" Grid.ColumnSpan="2" MouseDown="mouse_MouseDown"/>        
-        <Rectangle x:Name="rect_footer" Grid.Row="2" Fill="#1E1E27" Grid.ColumnSpan="2" MouseDown="mouse_MouseDown"/>
-        
-        
-        <Button x:Name="btn_x" Content="X" Grid.Column="1" HorizontalAlignment="Left" Margin="152,0,0,0" VerticalAlignment="Top" Width="27" Height="27" Background="#FF1E1E27" Foreground="WhiteSmoke" BorderThickness="0" Click="mouse_x_click"/>
-        <Label Foreground="AliceBlue" Content="© PoliHub 2014 - 2015" Grid.Row="2" Grid.RowSpan="1" Grid.ColumnSpan="2" Margin="0,50,0,0" FontSize="10.667" FontWeight="SemiBold" />
+        <Rectangle x:Name="rect_header" Grid.Row="0" Grid.Column="0" Fill="#1E1E27" Margin="0,0,0,0" Grid.ColumnSpan="2" MouseDown="mouse_MouseDown"/>
+
+
+        <Button x:Name="btn_x" Content="X" Grid.Column="1" HorizontalAlignment="Left" Margin="271,-2,0,0" VerticalAlignment="Top" Width="27" Height="27" Background="#FF1E1E27" Foreground="WhiteSmoke" BorderThickness="0" Click="mouse_x_click"/>
 
         <DockPanel Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="1" x:Name="details_container" Visibility="Collapsed" >
 
@@ -59,6 +57,9 @@
                 <TextBlock Text="VERSIONI" FontSize="24" Foreground="AliceBlue" FontStyle="Italic" TextOptions.TextFormattingMode="Display" FontWeight="SemiBold" VerticalAlignment="Top" TextAlignment="Center" HorizontalAlignment="Left" Margin="36,0,0,0"/>
             </StackPanel>
         </DockPanel>
-        
+        <Rectangle x:Name="rect_header_Copy1" Grid.Row="2" Grid.Column="0" Fill="#1E1E27" Grid.ColumnSpan="2" MouseDown="mouse_MouseDown" Margin="-2,0,-4,-2"/>
+        <Label Foreground="AliceBlue" Content="© PoliHub 2014 - 2015" Grid.Row="2" Grid.ColumnSpan="2" Margin="4,2,-4,2" FontSize="10.667" FontWeight="SemiBold" />
+        <Image x:Name="image" HorizontalAlignment="Left" Height="47" Margin="12,5,0,0" VerticalAlignment="Top" Width="49" Source="images/polihub2.png"/>
+
     </Grid>
 </Window>

@@ -181,13 +181,14 @@ namespace PDS_Client
                 panel.Name = "folder_panel";
                 panel.VerticalAlignment = VerticalAlignment.Center;
                 panel.Orientation = Orientation.Horizontal;
-                //panel.MouseLeftButtonDown += MouseFolderButtonDownHandler;
+                panel.MouseLeftButtonDown += MouseFolderButtonDownHandler;
                
 
                 Image img_folder = new Image();
                 img_folder.Source = new BitmapImage(new Uri(@"\images\folderIcon.png", UriKind.RelativeOrAbsolute));
-                img_folder.Stretch = Stretch.None;
-                
+
+                img_folder.Width = 50;
+                img_folder.Height = 50;
                 panel.Children.Add(img_folder);
 
 
@@ -210,11 +211,13 @@ namespace PDS_Client
                 panel.Name = "file_panel";
                 panel.VerticalAlignment = VerticalAlignment.Center;
                 panel.Orientation = Orientation.Horizontal;
-                //panel.MouseLeftButtonDown += MouseFileButtonDownHandler;
+                panel.MouseLeftButtonDown += MouseFileButtonDownHandler;
 
                 Image img_file = new Image();
                 img_file.Source = new BitmapImage(new Uri(@"\images\fileIcon.png", UriKind.RelativeOrAbsolute));
-                img_file.Stretch = Stretch.None;
+              //  img_file.Stretch = Stretch.None;
+                img_file.Width = 50;
+                img_file.Height = 50;
 
                 panel.Children.Add(img_file);
 
@@ -223,7 +226,7 @@ namespace PDS_Client
                 lbl_file_name.Content = file;
                 panel.Children.Add(lbl_file_name);
            
-                panel.MouseLeftButtonDown += MouseFileButtonDownHandler;
+       
                 g.Children.Add(panel);
             }
 
