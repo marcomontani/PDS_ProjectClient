@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Net;
 using System.Windows.Shapes;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 
 namespace PDS_Client
 {
@@ -63,10 +64,23 @@ namespace PDS_Client
         }
 
 
+        private void background_clicked(object sender, RoutedEventArgs e)
+        {
+            ((Button)FindName("btn_next")).Focus();
+        }
+
         private void txt_wizard_GotFocus(object sender, RoutedEventArgs e)
         {
             ((TextBox)sender).Text = "";
-
+            if (status == 3)
+            {
+                System.Windows.Forms.FolderBrowserDialog dialog = new System.Windows.Forms.FolderBrowserDialog();
+                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    ((TextBox)sender).Text = dialog.SelectedPath;
+                }
+            }
+            
         }
 
         private void elps_wizards_MouseOver(object sender, RoutedEventArgs e)
@@ -117,6 +131,16 @@ namespace PDS_Client
                     break;
                 case 0:
                     username = ((TextBox)this.FindName("txt_wizard")).Text;
+                    if (username == null || username.Equals(""))
+                    {
+                        status = -1;
+                        ((TextBlock)this.FindName("text_error")).Text = "Non hai inserito nessun username";
+                        Storyboard s = (Storyboard)((Grid)this.FindName("mouse")).FindResource("error_fading");
+                        s.Begin();
+                        handleNewStatus();
+                        break;
+
+                    }
                     password = null;
                     path = null;
                     ((Label)this.FindName("lbl_wizard")).Content = "Inserisci la password";
@@ -128,19 +152,40 @@ namespace PDS_Client
                     status = 1;
                     break;
                 case 1:
-                    username = ((TextBox)this.FindName("txt_wizard")).Text;
-                    password = null;
+                    password = ((TextBox)this.FindName("txt_wizard")).Text;
                     path = null;
                     ((Label)this.FindName("lbl_wizard")).Content = "Reinserisci la password";
                     ((TextBox)this.FindName("txt_wizard")).Text = "Password";
+
                     ((Ellipse)this.FindName("circle1")).Fill = new SolidColorBrush(Colors.WhiteSmoke);
                     ((Ellipse)this.FindName("circle2")).Fill = new SolidColorBrush(Colors.WhiteSmoke);
                     ((Ellipse)this.FindName("circle3")).Fill = new SolidColorBrush(Colors.WhiteSmoke);
                     ((Ellipse)this.FindName("circle4")).Fill = ((Label)this.FindName("lbl_wizard_footer")).Background;
                     status = 2;
                     break;
+                case 2:
+                    if ( !((TextBox)this.FindName("txt_wizard")).Text.Equals(password))
+                    {
+                        status = 0;
+                        password = null;
+                        ((Label)this.FindName("text_error")).Content = "Non hai inserito la stessa password";
+                        handleNewStatus();
+                        Storyboard s = (Storyboard)((Grid)this.FindName("mouse")).FindResource("error_fading");
+                        s.Begin();
+                        break;
+                    }
+                    ((Label)this.FindName("lbl_wizard")).Content = "Scegli la cartella";
+                    ((TextBox)this.FindName("txt_wizard")).Text = "Percorso";
+                    ((Button)this.FindName("btn_next")).Content = "Registrati";
+                    ((Ellipse)this.FindName("circle1")).Fill = new SolidColorBrush(Colors.WhiteSmoke);
+                    ((Ellipse)this.FindName("circle2")).Fill = new SolidColorBrush(Colors.WhiteSmoke);
+                    ((Ellipse)this.FindName("circle3")).Fill = new SolidColorBrush(Colors.WhiteSmoke);
+                    ((Ellipse)this.FindName("circle4")).Fill = new SolidColorBrush(Colors.WhiteSmoke);
+                    status = 3;
+                    break;
+                case 3:
 
-
+                    break;
             }
         }
     }
