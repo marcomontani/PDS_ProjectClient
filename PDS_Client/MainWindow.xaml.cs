@@ -31,21 +31,20 @@ namespace PDS_Client
     public partial class MainWindow : Window
     {
         Queue<queueObject> eventsArray = new Queue<queueObject>();
-        BindingList<FileSystemElement> currentWorkDirectory = new BindingList<FileSystemElement>();
         Socket s;
-        int flag;
-        int rowElements = 9;
-        string BASE_DIRECTORY = "C:\\Users\\Gaetano\\Documents\\malnati";
         
+        int rowElements = 9;
+        const string BASE_DIRECTORY = "C:\\Users\\Gaetano\\Documents\\malnati";
+        string currentDirectory;
+
+
         public MainWindow()
         {
             InitializeComponent();
+            currentDirectory = "C:";
             //syncFolder();
             watchFolder();
-            flag = 0;
-            addCurrentFoderInfo(BASE_DIRECTORY);
-
-            this.DataContext = currentWorkDirectory;
+            
         }
 
         private void syncFolder()
@@ -172,7 +171,7 @@ namespace PDS_Client
             };
             sb.Begin();
             e.Handled = true;
-            flag = 1;
+            
         }
 
        
@@ -251,17 +250,24 @@ namespace PDS_Client
 
         }
 
+
+        public void updateFolders()
+        {
+            addCurrentFoderInfo(currentDirectory);
+        }
+
+
+        public void setCurrentDirectory(string currDir)
+        {
+            currentDirectory = currDir;
+        }
+
    
         private void closeVersions(object sender, MouseButtonEventArgs e)
         {
-            if (flag==1)
-            {
-                Storyboard sb = (Storyboard)((Grid)this.FindName("fs_container")).FindResource("key_details_animation_close");
-                sb.Completed += closeSidebar;
-                sb.Begin();
-                
-                
-            }
+            Storyboard sb = (Storyboard)((Grid)this.FindName("fs_container")).FindResource("key_details_animation_close");
+            sb.Completed += closeSidebar;
+            sb.Begin();  
         }
 
         void closeSidebar(object sender, EventArgs e)
@@ -271,7 +277,6 @@ namespace PDS_Client
             rowElements = 10;
             ((StackPanel)this.FindName("fs_grid")).Children.Clear();
             addCurrentFoderInfo(BASE_DIRECTORY);
-            flag = 0;
         }
      
     }

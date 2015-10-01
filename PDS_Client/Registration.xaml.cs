@@ -8,6 +8,9 @@ using System.Net;
 using System.Windows.Shapes;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Diagnostics;
+using System;
+using System.Text;
 
 namespace PDS_Client
 {
@@ -123,6 +126,7 @@ namespace PDS_Client
                     path = null;
                     ((Label)this.FindName("lbl_wizard")).Content = "Inserisci il tuo username";
                     ((TextBox)this.FindName("txt_wizard")).Text = "Username";
+                    ((Button)this.FindName("btn_next")).Content = "Avanti";
                     ((Ellipse)this.FindName("circle1")).Fill = new SolidColorBrush(Colors.WhiteSmoke);
                     ((Ellipse)this.FindName("circle2")).Fill = ((Label)this.FindName("lbl_wizard_footer")).Background;
                     ((Ellipse)this.FindName("circle3")).Fill = ((Label)this.FindName("lbl_wizard_footer")).Background;
@@ -133,18 +137,17 @@ namespace PDS_Client
                     username = ((TextBox)this.FindName("txt_wizard")).Text;
                     if (username == null || username.Equals(""))
                     {
-                        status = -1;
                         ((TextBlock)this.FindName("text_error")).Text = "Non hai inserito nessun username";
                         Storyboard s = (Storyboard)((Grid)this.FindName("mouse")).FindResource("error_fading");
                         s.Begin();
-                        handleNewStatus();
                         break;
-
                     }
                     password = null;
                     path = null;
                     ((Label)this.FindName("lbl_wizard")).Content = "Inserisci la password";
                     ((TextBox)this.FindName("txt_wizard")).Text = "Password";
+
+                    ((Button)this.FindName("btn_next")).Content = "Avanti";
                     ((Ellipse)this.FindName("circle1")).Fill = new SolidColorBrush(Colors.WhiteSmoke);
                     ((Ellipse)this.FindName("circle2")).Fill = new SolidColorBrush(Colors.WhiteSmoke);
                     ((Ellipse)this.FindName("circle3")).Fill = ((Label)this.FindName("lbl_wizard_footer")).Background;
@@ -153,10 +156,18 @@ namespace PDS_Client
                     break;
                 case 1:
                     password = ((TextBox)this.FindName("txt_wizard")).Text;
+                    if (password == null || password.Equals(""))
+                    {
+                        ((TextBlock)this.FindName("text_error")).Text = "Non hai inserito nessuna password";
+                        Storyboard s = (Storyboard)((Grid)this.FindName("mouse")).FindResource("error_fading");
+                        s.Begin();
+                        break;
+                    }
+
                     path = null;
                     ((Label)this.FindName("lbl_wizard")).Content = "Reinserisci la password";
                     ((TextBox)this.FindName("txt_wizard")).Text = "Password";
-
+                    ((Button)this.FindName("btn_next")).Content = "Avanti";
                     ((Ellipse)this.FindName("circle1")).Fill = new SolidColorBrush(Colors.WhiteSmoke);
                     ((Ellipse)this.FindName("circle2")).Fill = new SolidColorBrush(Colors.WhiteSmoke);
                     ((Ellipse)this.FindName("circle3")).Fill = new SolidColorBrush(Colors.WhiteSmoke);
@@ -164,12 +175,19 @@ namespace PDS_Client
                     status = 2;
                     break;
                 case 2:
-                    if ( !((TextBox)this.FindName("txt_wizard")).Text.Equals(password))
+                    if (!((TextBox)this.FindName("txt_wizard")).Text.Equals(password))
                     {
-                        status = 0;
+                        status = 1;
                         password = null;
-                        ((Label)this.FindName("text_error")).Content = "Non hai inserito la stessa password";
-                        handleNewStatus();
+                        ((TextBlock)this.FindName("text_error")).Text = "Non hai inserito la stessa password";
+
+                        ((Label)this.FindName("lbl_wizard")).Content = "Inserisci la password";
+                        ((TextBox)this.FindName("txt_wizard")).Text = "Password";
+                        ((Ellipse)this.FindName("circle1")).Fill = new SolidColorBrush(Colors.WhiteSmoke);
+                        ((Ellipse)this.FindName("circle2")).Fill = new SolidColorBrush(Colors.WhiteSmoke);
+                        ((Ellipse)this.FindName("circle3")).Fill = ((Label)this.FindName("lbl_wizard_footer")).Background;
+                        ((Ellipse)this.FindName("circle4")).Fill = ((Label)this.FindName("lbl_wizard_footer")).Background;
+                        ((Button)this.FindName("btn_next")).Content = "Avanti";
                         Storyboard s = (Storyboard)((Grid)this.FindName("mouse")).FindResource("error_fading");
                         s.Begin();
                         break;
@@ -184,7 +202,53 @@ namespace PDS_Client
                     status = 3;
                     break;
                 case 3:
+                    path = ((TextBox)this.FindName("txt_wizard")).Text;
+                    Socket socket = null;
 
+                    try {
+                        socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                        socket.Connect(IPAddress.Parse("127.0.0.1"), 7000);
+                    } catch (SocketException se)
+                    {
+                        MessageBox.Show("Errore Nella connessione al server: codice" + se.ErrorCode, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        break;
+                    }
+                    
+                    int inviati = socket.Send(BitConverter.GetBytes(1)); // SIGN IN
+                    
+                    string message = username + " " + password + " " + path;
+                    Debug.Print("message = '" + message + "'");
+
+                    
+
+                    // TODO: SOLVE PROBLEM IF MESSAGE CONTAINS WHITE SPACES
+                    // maybe path = path.replace(" ", "\t");
+
+                    /*
+                    socket.Send(Encoding.ASCII.GetBytes(message), message.Length, SocketFlags.None);
+
+                    byte[] buffer = new byte[10];
+                    socket.Receive(buffer);
+                    message = Encoding.ASCII.GetString(buffer);
+                    if (message.Equals("ERR"))
+                    {
+                        MessageBox.Show("Errore nella registrazione", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        break;
+                    }
+                    else
+                    {
+                        MessageBox.Show("Registrazione avvenuta correttamente", "OK", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                    /*
+
+                    MainWindow mw = new MainWindow();
+                    mw.setSocket(socket);
+                    mw.setCurrentDirectory(path);
+                    mw.Show();
+                    mw.updateFolders();
+                    this.Close();
+
+    */
                     break;
             }
         }
