@@ -31,13 +31,14 @@ namespace PDS_Client
             username = null;
             password = null;
             path = null;
+            ((PasswordBox)this.FindName("pwd_wizard")).Visibility = Visibility.Collapsed;
+            ((TextBox)this.FindName("txt_wizard")).Visibility = Visibility.Visible;
+
 
         }
 
-
         public void createSocket()
-        {
-            
+        {            
             try
             {
                 s = new Socket(SocketType.Stream, ProtocolType.Tcp);
@@ -74,7 +75,10 @@ namespace PDS_Client
 
         private void txt_wizard_GotFocus(object sender, RoutedEventArgs e)
         {
-            ((TextBox)sender).Text = "";
+            
+            ((TextBox)FindName("txt_wizard")).Text = "";
+            ((PasswordBox)FindName("pwd_wizard")).Password = "";
+
             if (status == 3)
             {
                 System.Windows.Forms.FolderBrowserDialog dialog = new System.Windows.Forms.FolderBrowserDialog();
@@ -117,10 +121,13 @@ namespace PDS_Client
 
 
         private void handleNewStatus()
-        {
+        {           
+
             switch (status)
             {
                 case -1:
+                    ((PasswordBox)this.FindName("pwd_wizard")).Visibility = Visibility.Collapsed;
+                    ((TextBox)this.FindName("txt_wizard")).Visibility = Visibility.Visible;
                     username = null;
                     password = null;
                     path = null;
@@ -134,6 +141,8 @@ namespace PDS_Client
                     status = 0;
                     break;
                 case 0:
+                    ((PasswordBox)this.FindName("pwd_wizard")).Visibility = Visibility.Visible;
+                    ((TextBox)this.FindName("txt_wizard")).Visibility = Visibility.Collapsed;
                     username = ((TextBox)this.FindName("txt_wizard")).Text;
                     if (username == null || username.Equals(""))
                     {
@@ -155,7 +164,11 @@ namespace PDS_Client
                     status = 1;
                     break;
                 case 1:
-                    password = ((TextBox)this.FindName("txt_wizard")).Text;
+
+                    ((PasswordBox)this.FindName("pwd_wizard")).Visibility = Visibility.Visible;
+                    ((TextBox)this.FindName("txt_wizard")).Visibility = Visibility.Collapsed;
+                    
+                    password = ((PasswordBox)this.FindName("pwd_wizard")).Password;                                   
                     if (password == null || password.Equals(""))
                     {
                         ((TextBlock)this.FindName("text_error")).Text = "Non hai inserito nessuna password";
@@ -165,6 +178,7 @@ namespace PDS_Client
                     }
 
                     path = null;
+                    ((PasswordBox)FindName("pwd_wizard")).Password = "";
                     ((Label)this.FindName("lbl_wizard")).Content = "Reinserisci la password";
                     ((TextBox)this.FindName("txt_wizard")).Text = "Password";
                     ((Button)this.FindName("btn_next")).Content = "Avanti";
@@ -175,7 +189,9 @@ namespace PDS_Client
                     status = 2;
                     break;
                 case 2:
-                    if (!((TextBox)this.FindName("txt_wizard")).Text.Equals(password))
+                    ((PasswordBox)this.FindName("pwd_wizard")).Visibility = Visibility.Visible;
+                    ((TextBox)this.FindName("txt_wizard")).Visibility = Visibility.Collapsed;
+                    if (!((PasswordBox)this.FindName("pwd_wizard")).Password.Equals(password))
                     {
                         status = 1;
                         password = null;
@@ -192,6 +208,8 @@ namespace PDS_Client
                         s.Begin();
                         break;
                     }
+                    ((PasswordBox)this.FindName("pwd_wizard")).Visibility = Visibility.Collapsed;
+                    ((TextBox)this.FindName("txt_wizard")).Visibility = Visibility.Visible;
                     ((Label)this.FindName("lbl_wizard")).Content = "Scegli la cartella";
                     ((TextBox)this.FindName("txt_wizard")).Text = "Percorso";
                     ((Button)this.FindName("btn_next")).Content = "Registrati";
@@ -202,6 +220,8 @@ namespace PDS_Client
                     status = 3;
                     break;
                 case 3:
+                    ((PasswordBox)this.FindName("pwd_wizard")).Visibility = Visibility.Collapsed;
+                    ((TextBox)this.FindName("txt_wizard")).Visibility = Visibility.Visible;
                     path = ((TextBox)this.FindName("txt_wizard")).Text;
                     Socket socket = null;
 
@@ -216,31 +236,59 @@ namespace PDS_Client
                     
                     int inviati = socket.Send(BitConverter.GetBytes(1)); // SIGN IN
                     
-                    string message = username + " " + password + " " + path;
-                    
-                    Debug.Print("message = '" + message + "'");
-
-                    
-
-                    // TODO: SOLVE PROBLEM IF MESSAGE CONTAINS WHITE SPACES
-                    // maybe path = path.replace(" ", "\t");
-
-                    
+                    string message = username;
+         
                     socket.Send(Encoding.ASCII.GetBytes(message), message.Length, SocketFlags.None);
-                    
+
                     byte[] buffer = new byte[10];
                     socket.Receive(buffer);
                     message = Encoding.ASCII.GetString(buffer);
                     if (message.Contains("ERR"))
                     {
-                        MessageBox.Show("Errore nella registrazione", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show("Errore nell'username", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         break;
                     }
                     else
                     {
-                        MessageBox.Show("Registrazione avvenuta", "OK", MessageBoxButton.OK, MessageBoxImage.Information);
+                        MessageBox.Show("Username inviato correttamente", "OK", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
-                    
+
+                    message = password;
+
+                    socket.Send(Encoding.ASCII.GetBytes(message), message.Length, SocketFlags.None);
+
+                    buffer = new byte[10];
+                    socket.Receive(buffer);
+                    message = Encoding.ASCII.GetString(buffer);
+                    if (message.Contains("ERR"))
+                    {
+                        MessageBox.Show("Errore nella password", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        break;
+                    }
+                    else
+                    {
+                        MessageBox.Show("Password inviata correttamente", "OK", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+
+
+                    message = path;
+
+                    socket.Send(Encoding.ASCII.GetBytes(message), message.Length, SocketFlags.None);
+
+                    buffer = new byte[10];
+                    socket.Receive(buffer);
+                    message = Encoding.ASCII.GetString(buffer);
+                    if (message.Contains("ERR"))
+                    {
+                        MessageBox.Show("Errore nella password", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        break;
+                    }
+                    else
+                    {
+                        MessageBox.Show("Password inviata correttamente", "OK", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+
+                    /*
 
                     MainWindow mw = new MainWindow();
                     mw.setSocket(socket);
@@ -249,7 +297,7 @@ namespace PDS_Client
                     mw.updateFolders();
                     this.Close();
 
-    
+    */
                     break;
             }
         }
