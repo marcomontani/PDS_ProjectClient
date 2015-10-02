@@ -226,7 +226,7 @@ namespace PDS_Client
 
                     
                     socket.Send(Encoding.ASCII.GetBytes(message), message.Length, SocketFlags.None);
-
+                    
                     byte[] buffer = new byte[10];
                     socket.Receive(buffer);
                     message = Encoding.ASCII.GetString(buffer);
