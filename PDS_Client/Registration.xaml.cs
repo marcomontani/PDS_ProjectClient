@@ -65,7 +65,7 @@ namespace PDS_Client
 
         private void txt_wizard_GotFocus(object sender, RoutedEventArgs e)
         {
-            ((TextBox)sender).Text = "";
+           // ((TextBox)sender).Text = "";
 
         }
 

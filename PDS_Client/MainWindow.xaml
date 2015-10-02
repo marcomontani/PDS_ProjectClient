@@ -19,15 +19,15 @@
             <Storyboard x:Name="openDetails"
                         x:Key="key_details_animation">
                 <ThicknessAnimationUsingKeyFrames Storyboard.TargetName="details_container" Storyboard.TargetProperty="Margin" BeginTime="00:00:00">
-                    <SplineThicknessKeyFrame KeyTime="00:00:00" Value="177,0,0,0" />
-                    <SplineThicknessKeyFrame KeyTime="00:00:01" Value="0,0,0,0" />
+                    <SplineThicknessKeyFrame KeyTime="00:00:00" Value="333,0,0,0" />
+                    <SplineThicknessKeyFrame KeyTime="00:00:00.85" Value="0,0,0,0" />
                 </ThicknessAnimationUsingKeyFrames>
             </Storyboard>
             <Storyboard x:Name="closeDetails"
                         x:Key="key_details_animation_close">
                 <ThicknessAnimationUsingKeyFrames Storyboard.TargetName="details_container" Storyboard.TargetProperty="Margin" BeginTime="00:00:00">
                     <SplineThicknessKeyFrame KeyTime="00:00:00" Value="0,0,0,0" />
-                    <SplineThicknessKeyFrame KeyTime="00:00:01" Value="177,0,0,0" />
+                    <SplineThicknessKeyFrame KeyTime="00:00:00.85" Value="333,0,0,0" />
                 </ThicknessAnimationUsingKeyFrames>
             </Storyboard>
 
@@ -45,7 +45,7 @@
         </Grid.ColumnDefinitions>
 
         <StackPanel Orientation="Vertical"  Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" x:Name="fs_grid"  MouseLeftButtonDown="closeVersions" Background="WhiteSmoke" />
-        <Rectangle x:Name="rect_header" Grid.Row="0" Grid.Column="0" Fill="#1E1E27" Margin="0,0,0,0" Grid.ColumnSpan="2" MouseDown="mouse_MouseDown"/>
+        <Rectangle x:Name="rect_header" Grid.Row="0" Grid.Column="0" Fill="#111221" Margin="0,0,0,0" Grid.ColumnSpan="2" MouseDown="mouse_MouseDown"/>
 
 
         <Button x:Name="btn_x" Content="X" Grid.Column="1" HorizontalAlignment="Left" Margin="271,-2,0,0" VerticalAlignment="Top" Width="27" Height="27" Background="#FF1E1E27" Foreground="WhiteSmoke" BorderThickness="0" Click="mouse_x_click"/>
