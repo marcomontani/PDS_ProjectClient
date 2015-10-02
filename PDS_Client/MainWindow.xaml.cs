@@ -36,7 +36,7 @@ namespace PDS_Client
         int rowElements = 9;
         const string BASE_DIRECTORY = "C:\\Users\\Gaetano\\Documents\\malnati";
         string currentDirectory;
-
+        
 
         public MainWindow()
         {
@@ -44,7 +44,7 @@ namespace PDS_Client
             currentDirectory = "C:";
             //syncFolder();
             watchFolder();
-            
+
         }
 
         private void syncFolder()
@@ -165,7 +165,7 @@ namespace PDS_Client
             ((UIElement)this.FindName("details_container")).Visibility = Visibility.Visible;
             Storyboard sb = (Storyboard)((Grid)this.FindName("fs_container")).FindResource("key_details_animation");
             sb.Completed += (object s, EventArgs ev) => {
-                rowElements = 5;
+                rowElements = 7;
                 ((StackPanel)this.FindName("fs_grid")).Children.Clear();
                 addCurrentFoderInfo(BASE_DIRECTORY);
             };
@@ -189,11 +189,13 @@ namespace PDS_Client
                     hpanel.Name = "row_panel_" + i;
                     hpanel.VerticalAlignment = VerticalAlignment.Center;
                     hpanel.Orientation = Orientation.Horizontal;
+                    hpanel.Margin = new Thickness(5, 5, 0, 0); 
                         };
               
                 i++;
                 StackPanel panel = new StackPanel();
-                panel.Width = 70;
+                panel.Width = 100;
+                panel.Height = 85;
                 panel.Name = "folder_panel";
                 panel.VerticalAlignment = VerticalAlignment.Center;
                 panel.HorizontalAlignment = HorizontalAlignment.Center;
@@ -209,11 +211,15 @@ namespace PDS_Client
                 panel.Children.Add(img_folder);
 
 
-                Label lbl_dir_name = new Label();
-                lbl_dir_name.Width = 50;
+                TextBlock lbl_dir_name = new TextBlock();
+
+                lbl_dir_name.MaxWidth = 85;
+                lbl_dir_name.MinWidth = 40;
+                lbl_dir_name.TextWrapping = TextWrapping.Wrap;
+                lbl_dir_name.TextAlignment = TextAlignment.Center;
        
                 lbl_dir_name.Name = "lbl_folder_name";
-                lbl_dir_name.Content = dir.Split('\\')[dir.Split('\\').Length-1];
+                lbl_dir_name.Text = dir.Split('\\')[dir.Split('\\').Length-1];
                 panel.Children.Add(lbl_dir_name);
 
 
@@ -250,7 +256,7 @@ namespace PDS_Client
 
         }
 
-
+   
         public void updateFolders()
         {
             addCurrentFoderInfo(currentDirectory);
@@ -265,9 +271,9 @@ namespace PDS_Client
    
         private void closeVersions(object sender, MouseButtonEventArgs e)
         {
-            Storyboard sb = (Storyboard)((Grid)this.FindName("fs_container")).FindResource("key_details_animation_close");
-            sb.Completed += closeSidebar;
-            sb.Begin();  
+                Storyboard sb = (Storyboard)((Grid)this.FindName("fs_container")).FindResource("key_details_animation_close");
+                sb.Completed += closeSidebar;
+                sb.Begin();
         }
 
         void closeSidebar(object sender, EventArgs e)

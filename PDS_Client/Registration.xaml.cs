@@ -83,7 +83,7 @@ namespace PDS_Client
                     ((TextBox)sender).Text = dialog.SelectedPath;
                 }
             }
-            
+
         }
 
         private void elps_wizards_MouseOver(object sender, RoutedEventArgs e)
