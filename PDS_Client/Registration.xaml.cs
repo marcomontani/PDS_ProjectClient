@@ -217,6 +217,7 @@ namespace PDS_Client
                     int inviati = socket.Send(BitConverter.GetBytes(1)); // SIGN IN
                     
                     string message = username + " " + password + " " + path;
+                    
                     Debug.Print("message = '" + message + "'");
 
                     
@@ -230,16 +231,16 @@ namespace PDS_Client
                     byte[] buffer = new byte[10];
                     socket.Receive(buffer);
                     message = Encoding.ASCII.GetString(buffer);
-                    if (message.Equals("ERR"))
+                    if (message.Contains("ERR"))
                     {
                         MessageBox.Show("Errore nella registrazione", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         break;
                     }
                     else
                     {
-                        MessageBox.Show("Registrazione avvenuta correttamente", "OK", MessageBoxButton.OK, MessageBoxImage.Information);
+                        MessageBox.Show("Registrazione avvenuta", "OK", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
-                    /*
+                    
 
                     MainWindow mw = new MainWindow();
                     mw.setSocket(socket);
@@ -248,7 +249,7 @@ namespace PDS_Client
                     mw.updateFolders();
                     this.Close();
 
-    */
+    
                     break;
             }
         }

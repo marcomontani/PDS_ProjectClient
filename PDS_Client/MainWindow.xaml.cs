@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
+using System.Diagnostics;
 
 namespace PDS_Client
 {
@@ -34,7 +35,6 @@ namespace PDS_Client
         Socket s;
         
         int rowElements = 9;
-        const string BASE_DIRECTORY = "C:\\Users\\Gaetano\\Documents\\malnati";
         string currentDirectory;
         
 
@@ -42,12 +42,12 @@ namespace PDS_Client
         {
             InitializeComponent();
             currentDirectory = "C:";
-            //syncFolder();
+           
             watchFolder();
 
         }
 
-        private void syncFolder()
+        public void syncFolder()
         {
             s.Send(BitConverter.GetBytes(8));  // == ENUM.getUserFiles
             byte[] buffer = new byte[1024];
@@ -58,7 +58,7 @@ namespace PDS_Client
 
             List<JSON_Folder_Items> items = JsonConvert.DeserializeObject<List<JSON_Folder_Items>>(serverFolderDescription);
             // todo: add date of last update and compare it with date of last modify
-            checkFileExists(BASE_DIRECTORY, items);
+            checkFileExists(currentDirectory, items);
 
         }
 
@@ -115,7 +115,7 @@ namespace PDS_Client
 
         private void watchFolder()
         {
-            FileSystemWatcher fs = new FileSystemWatcher(BASE_DIRECTORY);
+            FileSystemWatcher fs = new FileSystemWatcher(currentDirectory);
             fs.Changed += new FileSystemEventHandler(OnChanged);
             fs.NotifyFilter = NotifyFilters.LastWrite;
             fs.EnableRaisingEvents = true;
@@ -151,12 +151,13 @@ namespace PDS_Client
 
         private void MouseFolderButtonDownHandler(object sender, MouseButtonEventArgs e)
         {
-            ((StackPanel)this.FindName("fs_grid")).Children.Clear(); // remove all childs
-
+            
             Panel p = (Panel)sender;
-            Label lblDirectory = (Label)p.Children[1];            
-            string newDir = (string)(lblDirectory).Content;
-            addCurrentFoderInfo(BASE_DIRECTORY + "\\" + newDir);
+            TextBlock lblDirectory = (TextBlock)p.Children[1];            
+            string newDir = (string)(lblDirectory).Text;
+            currentDirectory += ("\\" + newDir);
+            ((StackPanel)this.FindName("fs_grid")).Children.Clear(); // remove all childs
+            addCurrentFoderInfo(currentDirectory);
         }
 
 
@@ -167,7 +168,7 @@ namespace PDS_Client
             sb.Completed += (object s, EventArgs ev) => {
                 rowElements = 7;
                 ((StackPanel)this.FindName("fs_grid")).Children.Clear();
-                addCurrentFoderInfo(BASE_DIRECTORY);
+                addCurrentFoderInfo(currentDirectory);
             };
             sb.Begin();
             e.Handled = true;
@@ -265,7 +266,9 @@ namespace PDS_Client
 
         public void setCurrentDirectory(string currDir)
         {
+            Debug.Print("Main Window: setCurrentDirectory(" + currDir + ")");
             currentDirectory = currDir;
+            Debug.Print("Main Window: current directory = " + currentDirectory);
         }
 
    
@@ -276,13 +279,13 @@ namespace PDS_Client
                 sb.Begin();
         }
 
-        void closeSidebar(object sender, EventArgs e)
+        private void closeSidebar(object sender, EventArgs e)
         {
             ((UIElement)this.FindName("details_container")).Visibility = Visibility.Collapsed;
             Grid.SetColumnSpan((UIElement)this.FindName("fs_grid"), 2);
             rowElements = 10;
             ((StackPanel)this.FindName("fs_grid")).Children.Clear();
-            addCurrentFoderInfo(BASE_DIRECTORY);
+            addCurrentFoderInfo(currentDirectory);
         }
      
     }
