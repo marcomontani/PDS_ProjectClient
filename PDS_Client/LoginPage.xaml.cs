@@ -29,7 +29,6 @@ namespace PDS_Client
         public Window1()
         {
             InitializeComponent();
-
         }
 
 
@@ -39,9 +38,9 @@ namespace PDS_Client
             try
             {
                 s = new Socket(SocketType.Stream, ProtocolType.Tcp);
-               
-                IPAddress sAddr = new IPAddress(2130706433); //  127.0.0.1 --> 2130706433
-                //s.Connect(sAddr,7000);
+
+                IPAddress sAddr = IPAddress.Parse("127.0.0.1");
+                s.Connect(sAddr,7000);
                 if (!s.Connected) throw new SocketException();
             }
             catch(SocketException se)
@@ -53,21 +52,28 @@ namespace PDS_Client
 
         private void btn_login_Click(object sender, RoutedEventArgs e)
         {
-
-           
             if (s == null) createSocket(); // the socket is already connected
             string username = ((TextBox)this.FindName("text_user")).Text;
             string password = ((PasswordBox)this.FindName("text_pass")).Password;
 
-            string message = "LOGIN " + username + " " + password; // todo: substitute LOGIN with the correct int
-            //s.Send(Encoding.ASCII.GetBytes(message));
+            s.Send(BitConverter.GetBytes(0), SocketFlags.None);
+            string message = username + " " + password; // todo: substitute LOGIN with the correct int
+            s.Send(Encoding.ASCII.GetBytes(message));
 
-            // todo: wait for answer. if ok proceed
+            byte[] buffer = new byte[10];
+            s.Receive(buffer);
+            message = Encoding.ASCII.GetString(buffer);
+            if (message.Equals("OK")) { 
+                MainWindow main = new MainWindow();
+                main.setSocket(s);
 
-            MainWindow main = new MainWindow();
-            main.setSocket(s);
-            main.Show();
-            this.Close();
+                string path = null;
+                // todo: ask path to the server
+                main.setCurrentDirectory(path);
+
+                main.Show();
+                this.Close();
+            }
         }
 
         private void mouse_MouseDown(object sender, MouseButtonEventArgs e)
