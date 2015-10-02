@@ -224,7 +224,7 @@ namespace PDS_Client
                     // TODO: SOLVE PROBLEM IF MESSAGE CONTAINS WHITE SPACES
                     // maybe path = path.replace(" ", "\t");
 
-                    /*
+                    
                     socket.Send(Encoding.ASCII.GetBytes(message), message.Length, SocketFlags.None);
 
                     byte[] buffer = new byte[10];
