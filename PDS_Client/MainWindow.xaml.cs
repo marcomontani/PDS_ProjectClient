@@ -14,6 +14,7 @@ using System.Windows.Input;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using System.Diagnostics;
+using System.Threading;
 
 namespace PDS_Client
 {
@@ -47,16 +48,28 @@ namespace PDS_Client
 
         }
 
-        public void syncFolder()
+
+        public void sync()
         {
+            Thread t = new Thread(syncFolder);
+            t.Start();
+        }
+
+        private void syncFolder()
+        {
+            Debug.WriteLine("THREAD STARTED");
             s.Send(BitConverter.GetBytes(8));  // == ENUM.getUserFiles
             byte[] buffer = new byte[1024];
             
-            s.Receive(buffer, 1024, SocketFlags.None);
+            int received = s.Receive(buffer, 1024, SocketFlags.None);
             string serverFolderDescription = Encoding.ASCII.GetString(buffer);
+            serverFolderDescription = serverFolderDescription.Remove(received);
             // now in the string we have the JSON string description. it is "folder: [{"path":"...", "name":"......"}]"
 
+            Debug.WriteLine("JSON rappresentation of the folder status on the server: \n" + serverFolderDescription + "\n");
+            
             List<JSON_Folder_Items> items = JsonConvert.DeserializeObject<List<JSON_Folder_Items>>(serverFolderDescription);
+            
             // todo: add date of last update and compare it with date of last modify
             checkFileExists(currentDirectory, items);
 
@@ -68,15 +81,23 @@ namespace PDS_Client
 
             foreach (string file in System.IO.Directory.GetFiles(basePath)) {
                 JSON_Folder_Items item = new JSON_Folder_Items();
-                item.name = file;
+                string[] splitPath = file.Split('\\');
+                item.name = splitPath[splitPath.Length-1];
                 item.path = basePath;
 
-
-                if (!items.Contains(item)) sendFileToServer(basePath);
+                if (!items.Contains(item))
+                {
+                    try
+                    {
+                        sendFileToServer(file);
+                    }
+                    catch (Exception e)
+                    {
+                        MessageBox.Show("Impossibile inviare il file " + file + " al server", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        Debug.WriteLine("Impossibile inviare il file " + file + " al server");
+                    }
+                }
             }
-
-
-
         }
 
 
@@ -87,22 +108,25 @@ namespace PDS_Client
 
             byte[] inBuff = new byte[1024];
             s.Receive(inBuff);
-            if (Encoding.ASCII.GetString(inBuff) != "OK") throw new Exception("error: filename sent but error was returned");
+            if (!Encoding.ASCII.GetString(inBuff).Contains("OK")) throw new Exception("error: filename sent but error was returned");
 
+            
             long dimension = (new FileInfo(path)).Length;
             if (dimension > Int32.MaxValue) throw new Exception("error: file dimension too big! > 32 bit");
             int dim = (int)dimension;
 
             s.Send(BitConverter.GetBytes(dim));
+
             s.Send(File.ReadAllBytes(path));
-
+            
             s.Receive(inBuff);
-            if (Encoding.ASCII.GetString(inBuff) != "OK") throw new Exception("error: file not uploaded correctly");
-
+            if (!Encoding.ASCII.GetString(inBuff).Contains("OK")) throw new Exception("error: file not uploaded correctly");
+            
             // todo: calculate and send sha1 checksum
             SHA1 shaProvider = SHA1.Create();
             shaProvider.ComputeHash(new FileStream(path, FileMode.Open));
             s.Send(shaProvider.Hash);
+
         }
 
         

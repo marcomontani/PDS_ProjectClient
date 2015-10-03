@@ -39,6 +39,8 @@ namespace PDS_Client
             try
             {
                 s = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                IPAddress sAddr = IPAddress.Parse("127.0.0.1");
+                s.Connect(sAddr, 7000);
                 if (!s.Connected) throw new SocketException();
             }
             catch(SocketException se)
@@ -51,8 +53,7 @@ namespace PDS_Client
         private void btn_login_Click(object sender, RoutedEventArgs e)
         {
             if (s == null) createSocket(); // the socket is already connected
-            IPAddress sAddr = IPAddress.Parse("127.0.0.1");
-            s.Connect(sAddr, 7000);
+            
             string username = ((TextBox)this.FindName("text_user")).Text;
             string password = ((PasswordBox)this.FindName("text_pass")).Password;
 
@@ -79,16 +80,20 @@ namespace PDS_Client
                 string path = null;
                 s.Send(BitConverter.GetBytes(9));
                 int r = s.Receive(buffer);
-                if(r == 4) {
+
+                Debug.WriteLine("ricevuti: " + r);
+
+                if (r == 4) {
                     if(BitConverter.ToInt32(buffer, 0) == -1) {
-                        MessageBox.Show("Errore: non posso ottenere il file", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show("Errore: non posso ottenere il path", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+
                         return;
                     }
                 }
                 path = Encoding.ASCII.GetString(buffer);
 
                 Debug.Print("before delete: " + path + "\n");
-                Debug.Print("ricevuti: " + r);
+                
 
                 path = path.Remove(r);
 
@@ -97,7 +102,7 @@ namespace PDS_Client
                 main.setCurrentDirectory(path);
                 main.updateFolders();
                 main.Show();
-                main.syncFolder();
+                main.sync();
                 this.Close();
             }
             else MessageBox.Show("Errore: credenziali errate", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
