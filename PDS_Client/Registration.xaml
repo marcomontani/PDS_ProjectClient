@@ -39,13 +39,10 @@
         <Grid.Resources>
             <Storyboard x:Key="error_fading">
                 <DoubleAnimation  Storyboard.TargetName="text_error" Storyboard.TargetProperty="Opacity" BeginTime="00:00:00" Duration="00:00:03" From="1.0" To="0.0"/>
-
-
             </Storyboard>
         </Grid.Resources>
         
-        
-        
+               
         <Image Source="images/polihub2.png" Margin="-2,2,75,5" Grid.Row="1" Grid.ColumnSpan="2" RenderTransformOrigin="0.5,0.5">
             <Image.RenderTransform>
                 <TransformGroup>

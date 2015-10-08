@@ -19,16 +19,19 @@
             <Storyboard x:Name="openDetails"
                         x:Key="key_details_animation">
                 <ThicknessAnimationUsingKeyFrames Storyboard.TargetName="details_container" Storyboard.TargetProperty="Margin" BeginTime="00:00:00">
-                    <SplineThicknessKeyFrame KeyTime="00:00:00" Value="333,0,0,0" />
-                    <SplineThicknessKeyFrame KeyTime="00:00:00.85" Value="0,0,0,0" />
+                    <SplineThicknessKeyFrame KeyTime="00:00:00" Value="300,0,0,0" />
+                    <SplineThicknessKeyFrame KeyTime="00:00:00.6" Value="0,0,0,0" />
                 </ThicknessAnimationUsingKeyFrames>
+                <Int32Animation From="7" To="4" Duration="00:00:00.6"  Storyboard.TargetName="fs_grid" Storyboard.TargetProperty="(Grid.ColumnSpan)" />
+
             </Storyboard>
             <Storyboard x:Name="closeDetails"
                         x:Key="key_details_animation_close">
                 <ThicknessAnimationUsingKeyFrames Storyboard.TargetName="details_container" Storyboard.TargetProperty="Margin" BeginTime="00:00:00">
                     <SplineThicknessKeyFrame KeyTime="00:00:00" Value="0,0,0,0" />
-                    <SplineThicknessKeyFrame KeyTime="00:00:00.85" Value="333,0,0,0" />
+                    <SplineThicknessKeyFrame KeyTime="00:00:01.3" Value="300,0,0,0" />
                 </ThicknessAnimationUsingKeyFrames>
+                <Int32Animation From="4" To="7"  Storyboard.TargetName="fs_grid" Storyboard.TargetProperty="(Grid.ColumnSpan)" />
             </Storyboard>
 
         </Grid.Resources>
@@ -40,25 +43,31 @@
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="70*"/>
-            <ColumnDefinition Width="30*"/>
+            <ColumnDefinition Width="5*"/>
+            <ColumnDefinition Width="5*"/>
+            <ColumnDefinition Width="5*"/>
+            <ColumnDefinition Width="5*"/>
+            <ColumnDefinition Width="5*"/>
+            <ColumnDefinition Width="5*"/>
+
+
 
         </Grid.ColumnDefinitions>
 
-        <StackPanel Orientation="Vertical"  Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" x:Name="fs_grid"  MouseLeftButtonDown="closeVersions" Background="WhiteSmoke" />
-        <Rectangle x:Name="rect_header" Grid.Row="0" Grid.Column="0" Fill="#111221" Margin="0,0,0,0" Grid.ColumnSpan="2" MouseDown="mouse_MouseDown"/>
+        <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="7" x:Name="fs_grid"  MouseLeftButtonDown="closeVersions" Background="WhiteSmoke" />
+        <Rectangle x:Name="rect_header" Grid.Row="0" Grid.Column="0" Fill="#111221" Margin="0,0,0,0" Grid.ColumnSpan="7" MouseDown="mouse_MouseDown"/>
 
+        <DockPanel Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="6" x:Name="details_container" Visibility="Collapsed" >
 
-        <Button x:Name="btn_x" Content="X" Grid.Column="1" HorizontalAlignment="Left" Margin="271,-2,0,0" VerticalAlignment="Top" Width="27" Height="27" Background="#FF1E1E27" Foreground="WhiteSmoke" BorderThickness="0" Click="mouse_x_click"/>
+            <StackPanel x:Name="panel_details" Background="#FF1E1E27" Margin="0, 0,0, 0" Orientation="Vertical">
 
-        <DockPanel Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="1" x:Name="details_container" Visibility="Collapsed" Margin="0,6,0,20" Grid.RowSpan="2" >
-
-            <StackPanel x:Name="panel_details" Background="#FF1E1E27" Margin="2, 0,0, 0" Orientation="Vertical">
                 <TextBlock Text="VERSIONI" FontSize="24" Foreground="AliceBlue" FontStyle="Italic" TextOptions.TextFormattingMode="Display" FontWeight="SemiBold" VerticalAlignment="Top" TextAlignment="Center" HorizontalAlignment="Left" Margin="36,0,0,0"/>
             </StackPanel>
         </DockPanel>
-        <Rectangle x:Name="rect_header_Copy1" Grid.Row="2" Grid.Column="0" Fill="#1E1E27" Grid.ColumnSpan="2" MouseDown="mouse_MouseDown" Margin="-2,0,-4,-2"/>
+        <Rectangle x:Name="rect_header_Copy1" Grid.Row="2" Grid.Column="0" Fill="#1E1E27" Grid.ColumnSpan="7" MouseDown="mouse_MouseDown" Margin="-2,0,-2,-2"/>
         <Label Foreground="AliceBlue" Content="© PoliHub 2014 - 2015" Grid.Row="2" Grid.ColumnSpan="2" Margin="4,2,-4,2" FontSize="10.667" FontWeight="SemiBold" />
         <Image x:Name="image" HorizontalAlignment="Left" Height="47" Margin="12,5,0,0" VerticalAlignment="Top" Width="49" Source="images/polihub2.png"/>
+        <Button x:Name="btn_x" Content="X" Grid.Column="6" HorizontalAlignment="Left" Margin="19,1,0,0" VerticalAlignment="Top" Width="28" Height="27" Background="#FF1E1E27" Foreground="WhiteSmoke" BorderThickness="0" Click="mouse_x_click"/>
 
     </Grid>
 </Window>
