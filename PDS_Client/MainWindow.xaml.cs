@@ -175,19 +175,76 @@ namespace PDS_Client
 
         private void MouseFolderButtonDownHandler(object sender, MouseButtonEventArgs e)
         {
-            
             Panel p = (Panel)sender;
             TextBlock lblDirectory = (TextBlock)p.Children[1];            
             string newDir = (string)(lblDirectory).Text;
             currentDirectory += ("\\" + newDir);
             ((StackPanel)this.FindName("fs_grid")).Children.Clear(); // remove all childs
             addCurrentFoderInfo(currentDirectory);
+            
         }
 
 
         private void MouseFileButtonDownHandler(object sender, RoutedEventArgs e) {
+            // todo: add here the download of the file versions
             Grid.SetColumnSpan((UIElement)this.FindName("fs_grid"), 1);
             ((UIElement)this.FindName("details_container")).Visibility = Visibility.Visible;
+            // i start here a thread in order to download the versions of this file
+            string filename = (string)((Label)((StackPanel)sender).Children[1]).Content;
+
+
+            Thread downloader = new Thread( () =>
+           {
+               Debug.WriteLine("Into downloader (versions) thread");
+               s.Send(BitConverter.GetBytes(5)); // GET FILE VERSIONS
+
+               string pathToSend = currentDirectory + "\\" + filename;
+               s.Send(BitConverter.GetBytes(pathToSend.Length));
+               s.Send(Encoding.ASCII.GetBytes(pathToSend));
+
+               byte[] dim = new byte[4]; // just the space for an int
+               if(s.Receive(dim) != 4)
+               {
+                   Debug.WriteLine("did not receive a valid number");
+                   return;
+               }
+               if(BitConverter.ToInt32(dim, 0) < 0)
+               {
+                   // an error server side has occurred!
+                   Debug.WriteLine("dim of versions < 0");
+                   return;
+               }
+               byte[] buff = new byte[BitConverter.ToInt32(dim, 0)];
+               s.Receive(buff); // receive json
+
+               string versions = Encoding.ASCII.GetString(buff);
+
+               Debug.WriteLine(versions);
+
+               List<JSONVersion> items = JsonConvert.DeserializeObject<List<JSONVersion>>(versions);
+
+               foreach (JSONVersion v in items)
+               {
+                   Debug.WriteLine("v.date = " + v.date);
+                   Dispatcher.Invoke(()=>
+                   {
+                       TextBlock line = new TextBlock();
+                       line.Text = v.date;
+
+                       line.Foreground = new SolidColorBrush(Colors.AliceBlue);
+                       line.TextWrapping = TextWrapping.Wrap;
+                       line.TextAlignment = TextAlignment.Center;
+                       line.Name = "lbl_folder_name";
+                       ((Panel)FindName("panel_details")).Children.Add(line);
+                       Debug.WriteLine("inserted the new line -> " + line.Text);
+                   });
+               }
+               return;
+           }
+            );
+            downloader.Start();
+            
+
             Storyboard sb = (Storyboard)((Grid)this.FindName("fs_container")).FindResource("key_details_animation");
             sb.Completed += (object s, EventArgs ev) => {
                 rowElements = 7;
@@ -196,7 +253,6 @@ namespace PDS_Client
             };
             sb.Begin();
             e.Handled = true;
-            
         }
 
        

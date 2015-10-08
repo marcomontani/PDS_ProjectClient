@@ -50,10 +50,9 @@
 
         <Button x:Name="btn_x" Content="X" Grid.Column="1" HorizontalAlignment="Left" Margin="271,-2,0,0" VerticalAlignment="Top" Width="27" Height="27" Background="#FF1E1E27" Foreground="WhiteSmoke" BorderThickness="0" Click="mouse_x_click"/>
 
-        <DockPanel Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="1" x:Name="details_container" Visibility="Collapsed" >
+        <DockPanel Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="1" x:Name="details_container" Visibility="Collapsed" Margin="0,6,0,20" Grid.RowSpan="2" >
 
             <StackPanel x:Name="panel_details" Background="#FF1E1E27" Margin="2, 0,0, 0" Orientation="Vertical">
-
                 <TextBlock Text="VERSIONI" FontSize="24" Foreground="AliceBlue" FontStyle="Italic" TextOptions.TextFormattingMode="Display" FontWeight="SemiBold" VerticalAlignment="Top" TextAlignment="Center" HorizontalAlignment="Left" Margin="36,0,0,0"/>
             </StackPanel>
         </DockPanel>
