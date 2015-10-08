@@ -34,17 +34,24 @@ namespace PDS_Client
     {
         Queue<queueObject> eventsArray = new Queue<queueObject>();
         Socket s;
-        
-        int rowElements = 9;
+        int rowElements;
         string currentDirectory;
-        
+        bool flag = true;
 
         public MainWindow()
         {
             InitializeComponent();
-            currentDirectory = "C:";
-           
+            currentDirectory = "C:";           
             watchFolder();
+            rowElements = 9;
+            ((StackPanel)FindName("fs_grid")).SizeChanged += (s, e) =>
+            {
+                ((StackPanel)FindName("fs_grid")).Children.Clear();
+                double d = ((StackPanel)FindName("fs_grid")).ActualWidth;
+
+                rowElements = (int)(d / 100) + 1;
+                addCurrentFoderInfo(currentDirectory);
+            };
 
         }
 
@@ -59,9 +66,9 @@ namespace PDS_Client
         {
             Debug.WriteLine("THREAD STARTED");
             s.Send(BitConverter.GetBytes(8));  // == ENUM.getUserFiles
-            byte[] buffer = new byte[1024];
+            byte[] buffer = new byte[4096];
             
-            int received = s.Receive(buffer, 1024, SocketFlags.None);
+            int received = s.Receive(buffer, 4096, SocketFlags.None);
             string serverFolderDescription = Encoding.ASCII.GetString(buffer);
             serverFolderDescription = serverFolderDescription.Remove(received);
             // now in the string we have the JSON string description. it is "folder: [{"path":"...", "name":"......"}]"
@@ -175,28 +182,35 @@ namespace PDS_Client
 
         private void MouseFolderButtonDownHandler(object sender, MouseButtonEventArgs e)
         {
-            
+
+            ((StackPanel)this.FindName("fs_grid")).Children.Clear(); // remove all childs
             Panel p = (Panel)sender;
             TextBlock lblDirectory = (TextBlock)p.Children[1];            
             string newDir = (string)(lblDirectory).Text;
-            currentDirectory += ("\\" + newDir);
-            ((StackPanel)this.FindName("fs_grid")).Children.Clear(); // remove all childs
+            currentDirectory += ("\\" + newDir);            
             addCurrentFoderInfo(currentDirectory);
         }
 
 
         private void MouseFileButtonDownHandler(object sender, RoutedEventArgs e) {
-            Grid.SetColumnSpan((UIElement)this.FindName("fs_grid"), 1);
+            //  Grid.SetColumnSpan((UIElement)this.FindName("fs_grid"), 1);
+            if (flag == false) return;
             ((UIElement)this.FindName("details_container")).Visibility = Visibility.Visible;
             Storyboard sb = (Storyboard)((Grid)this.FindName("fs_container")).FindResource("key_details_animation");
-            sb.Completed += (object s, EventArgs ev) => {
-                rowElements = 7;
-                ((StackPanel)this.FindName("fs_grid")).Children.Clear();
-                addCurrentFoderInfo(currentDirectory);
+
+
+            //rowElements = 7;
+            ((StackPanel)this.FindName("fs_grid")).Children.Clear();
+            addCurrentFoderInfo(currentDirectory);
+            flag = false;
+            sb.Completed += (object s, EventArgs ev) =>
+            {
+                flag = true;
             };
             sb.Begin();
+
             e.Handled = true;
-            
+
         }
 
        
@@ -211,7 +225,7 @@ namespace PDS_Client
             {
                 if ((i % rowElements) == 0) {
                     hpanel = new StackPanel();
-                    hpanel.Name = "row_panel_" + i;
+                    //hpanel.Name = "row_panel_" + i;
                     hpanel.VerticalAlignment = VerticalAlignment.Center;
                     hpanel.Orientation = Orientation.Horizontal;
                     hpanel.Margin = new Thickness(5, 5, 0, 0); 
@@ -298,18 +312,23 @@ namespace PDS_Client
    
         private void closeVersions(object sender, MouseButtonEventArgs e)
         {
-                Storyboard sb = (Storyboard)((Grid)this.FindName("fs_container")).FindResource("key_details_animation_close");
-                sb.Completed += closeSidebar;
-                sb.Begin();
+            if (flag == false) return;
+            int span = Grid.GetColumnSpan((UIElement)this.FindName("fs_grid"));
+            if (span == 7 && flag) return;
+            Storyboard sb = (Storyboard)((Grid)this.FindName("fs_container")).FindResource("key_details_animation_close");
+            sb.Completed += closeSidebar;
+            flag = false;
+            sb.Begin();
         }
 
         private void closeSidebar(object sender, EventArgs e)
         {
             ((UIElement)this.FindName("details_container")).Visibility = Visibility.Collapsed;
-            Grid.SetColumnSpan((UIElement)this.FindName("fs_grid"), 2);
-            rowElements = 10;
+            //Grid.SetColumnSpan((UIElement)this.FindName("fs_grid"), 7);
+            // rowElements = 10;
             ((StackPanel)this.FindName("fs_grid")).Children.Clear();
             addCurrentFoderInfo(currentDirectory);
+            flag = true;
         }
      
     }
