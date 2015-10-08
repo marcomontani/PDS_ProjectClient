@@ -80,16 +80,20 @@ namespace PDS_Client
                 string path = null;
                 s.Send(BitConverter.GetBytes(9));
                 int r = s.Receive(buffer);
-                if(r == 4) {
+
+                Debug.WriteLine("ricevuti: " + r);
+
+                if (r == 4) {
                     if(BitConverter.ToInt32(buffer, 0) == -1) {
-                        MessageBox.Show("Errore: non posso ottenere il file", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show("Errore: non posso ottenere il path", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+
                         return;
                     }
                 }
                 path = Encoding.ASCII.GetString(buffer);
 
                 Debug.Print("before delete: " + path + "\n");
-                Debug.Print("ricevuti: " + r);
+                
 
                 path = path.Remove(r);
 
@@ -98,7 +102,7 @@ namespace PDS_Client
                 main.setCurrentDirectory(path);
                 main.updateFolders();
                 main.Show();
-                //main.syncFolder();
+                main.sync();
                 this.Close();
             }
             else MessageBox.Show("Errore: credenziali errate", "Error", MessageBoxButton.OK, MessageBoxImage.Error);

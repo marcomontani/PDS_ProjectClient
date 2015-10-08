@@ -248,10 +248,6 @@ namespace PDS_Client
                         MessageBox.Show("Errore nell'username", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         break;
                     }
-                    else
-                    {
-                        MessageBox.Show("Username inviato correttamente", "OK", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
 
                     message = password;
 
@@ -265,30 +261,17 @@ namespace PDS_Client
                         MessageBox.Show("Errore nella password", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         break;
                     }
-                    else
-                    {
-                        MessageBox.Show("Password inviata correttamente", "OK", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
-
-
+                    
                     message = path;
-
                     socket.Send(Encoding.ASCII.GetBytes(message), message.Length, SocketFlags.None);
-
                     buffer = new byte[10];
-                    socket.Receive(buffer);
+                    int r = socket.Receive(buffer);
                     message = Encoding.ASCII.GetString(buffer);
                     if (message.Contains("ERR"))
                     {
                         MessageBox.Show("Errore nella password", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         break;
                     }
-                    else
-                    {
-                        MessageBox.Show("Password inviata correttamente", "OK", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
-
-                    /*
 
                     MainWindow mw = new MainWindow();
                     mw.setSocket(socket);
@@ -297,7 +280,7 @@ namespace PDS_Client
                     mw.updateFolders();
                     this.Close();
 
-    */
+   
                     break;
             }
         }
