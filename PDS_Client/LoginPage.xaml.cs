@@ -39,6 +39,8 @@ namespace PDS_Client
             try
             {
                 s = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                IPAddress sAddr = IPAddress.Parse("127.0.0.1");
+                s.Connect(sAddr, 7000);
                 if (!s.Connected) throw new SocketException();
             }
             catch(SocketException se)
@@ -51,8 +53,7 @@ namespace PDS_Client
         private void btn_login_Click(object sender, RoutedEventArgs e)
         {
             if (s == null) createSocket(); // the socket is already connected
-            IPAddress sAddr = IPAddress.Parse("127.0.0.1");
-            s.Connect(sAddr, 7000);
+            
             string username = ((TextBox)this.FindName("text_user")).Text;
             string password = ((PasswordBox)this.FindName("text_pass")).Password;
 
@@ -97,7 +98,7 @@ namespace PDS_Client
                 main.setCurrentDirectory(path);
                 main.updateFolders();
                 main.Show();
-                main.syncFolder();
+                //main.syncFolder();
                 this.Close();
             }
             else MessageBox.Show("Errore: credenziali errate", "Error", MessageBoxButton.OK, MessageBoxImage.Error);

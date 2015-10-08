@@ -13,7 +13,6 @@ using System.Windows.Media.Imaging;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
-using System.Diagnostics;
 
 namespace PDS_Client
 {
@@ -34,20 +33,31 @@ namespace PDS_Client
         Queue<queueObject> eventsArray = new Queue<queueObject>();
         Socket s;
         
-        int rowElements = 9;
+        int rowElements;
         string currentDirectory;
+        bool flag=true;
         
 
         public MainWindow()
         {
             InitializeComponent();
             currentDirectory = "C:";
-           
+            //syncFolder();
             watchFolder();
+            rowElements = 9;           
+            ((StackPanel)FindName("fs_grid")).SizeChanged+= (s, e) =>
+            {
+                ((StackPanel)FindName("fs_grid")).Children.Clear();
+                double d = ((StackPanel)FindName("fs_grid")).ActualWidth;
+              
+                rowElements =(int)(d /100)+1;
+                addCurrentFoderInfo(currentDirectory);
+            };
+
 
         }
 
-        public void syncFolder()
+        private void syncFolder()
         {
             s.Send(BitConverter.GetBytes(8));  // == ENUM.getUserFiles
             byte[] buffer = new byte[1024];
@@ -151,31 +161,40 @@ namespace PDS_Client
 
         private void MouseFolderButtonDownHandler(object sender, MouseButtonEventArgs e)
         {
-            
+            ((StackPanel)this.FindName("fs_grid")).Children.Clear(); // remove all childs
+
             Panel p = (Panel)sender;
             TextBlock lblDirectory = (TextBlock)p.Children[1];            
             string newDir = (string)(lblDirectory).Text;
             currentDirectory += ("\\" + newDir);
-            ((StackPanel)this.FindName("fs_grid")).Children.Clear(); // remove all childs
             addCurrentFoderInfo(currentDirectory);
         }
 
 
         private void MouseFileButtonDownHandler(object sender, RoutedEventArgs e) {
-            Grid.SetColumnSpan((UIElement)this.FindName("fs_grid"), 1);
+            //  Grid.SetColumnSpan((UIElement)this.FindName("fs_grid"), 1);
+            if (flag == false) return;
             ((UIElement)this.FindName("details_container")).Visibility = Visibility.Visible;
             Storyboard sb = (Storyboard)((Grid)this.FindName("fs_container")).FindResource("key_details_animation");
-            sb.Completed += (object s, EventArgs ev) => {
-                rowElements = 7;
+            
+           
+                //rowElements = 7;
                 ((StackPanel)this.FindName("fs_grid")).Children.Clear();
                 addCurrentFoderInfo(currentDirectory);
-            };
+            flag = false;
+            sb.Completed += openSidebar;
             sb.Begin();
+            
             e.Handled = true;
             
         }
 
-       
+        void openSidebar(object sender, EventArgs e)
+        {
+            flag = true;
+
+
+        }
 
         private void addCurrentFoderInfo(string path)
         {
@@ -187,7 +206,7 @@ namespace PDS_Client
             {
                 if ((i % rowElements) == 0) {
                     hpanel = new StackPanel();
-                    hpanel.Name = "row_panel_" + i;
+                    //hpanel.Name = "row_panel_" + i;
                     hpanel.VerticalAlignment = VerticalAlignment.Center;
                     hpanel.Orientation = Orientation.Horizontal;
                     hpanel.Margin = new Thickness(5, 5, 0, 0); 
@@ -263,29 +282,32 @@ namespace PDS_Client
             addCurrentFoderInfo(currentDirectory);
         }
 
-
+        
         public void setCurrentDirectory(string currDir)
         {
-            Debug.Print("Main Window: setCurrentDirectory(" + currDir + ")");
             currentDirectory = currDir;
-            Debug.Print("Main Window: current directory = " + currentDirectory);
         }
 
    
         private void closeVersions(object sender, MouseButtonEventArgs e)
         {
+            if (flag == false) return;
+                int span = Grid.GetColumnSpan((UIElement)this.FindName("fs_grid"));
+                if (span == 7 && flag) return;
                 Storyboard sb = (Storyboard)((Grid)this.FindName("fs_container")).FindResource("key_details_animation_close");
                 sb.Completed += closeSidebar;
+                flag = false;
                 sb.Begin();
         }
 
-        private void closeSidebar(object sender, EventArgs e)
+        void closeSidebar(object sender, EventArgs e)
         {
             ((UIElement)this.FindName("details_container")).Visibility = Visibility.Collapsed;
-            Grid.SetColumnSpan((UIElement)this.FindName("fs_grid"), 2);
-            rowElements = 10;
+            //Grid.SetColumnSpan((UIElement)this.FindName("fs_grid"), 7);
+           // rowElements = 10;
             ((StackPanel)this.FindName("fs_grid")).Children.Clear();
             addCurrentFoderInfo(currentDirectory);
+            flag = true;
         }
      
     }
