@@ -99,7 +99,7 @@ namespace PDS_Client
                 lb.Margin = new Thickness(2, 2, 2, 2);
                 lb.HorizontalAlignment = HorizontalAlignment.Left;
                 lb.MouseLeftButtonDown += (s, e) => {                    
-                    ((StackPanel)this.FindName("fs_grid")).Children.Clear();
+                    ((StackPanel)this.FindName("fs_grid")).Children.Clear(); 
                     currentDirectory = "";
                     foreach (string a in perc)
                     {
