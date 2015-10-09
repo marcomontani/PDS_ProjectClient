@@ -38,6 +38,7 @@ namespace PDS_Client
         int rowElements;
         string currentDirectory;
         string root;
+        bool first = true;
         bool flag = true;
 
         public MainWindow()
@@ -51,14 +52,18 @@ namespace PDS_Client
             {
                 ((StackPanel)FindName("fs_grid")).Children.Clear();
                 double d = ((StackPanel)FindName("fs_grid")).ActualWidth;
-                root = ""+currentDirectory;
+                if (first)
+                {
+                    first = false;
+                    root = "" + currentDirectory;
+                }
                 rowElements = (int)(d / 100) + 1;
                 addCurrentFoderInfo(currentDirectory);
                 updateAddress();
                 
             };
             // <Label x:Name="label" Background="#2C4566" Foreground="AliceBlue" Content="C:\\" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="2,2,0,0"/>
-         
+
 
         }
 
@@ -76,17 +81,36 @@ namespace PDS_Client
             rt.Content = root;
             rt.Margin = new Thickness(2, 2, 2, 2);
             rt.HorizontalAlignment = HorizontalAlignment.Left;
+            rt.MouseLeftButtonDown += (s, e) => {
+                ((StackPanel)this.FindName("fs_grid")).Children.Clear();
+                currentDirectory = root;
+                updateAddress();
+                addCurrentFoderInfo(root);
+            };
             sp.Children.Add(rt);
+            
             foreach (string p in perc)
-            {
-                
-                if (counter++ < num_base ) continue;             
+            {                
+                if (counter++ < num_base ) continue;
                 Label lb = new Label();
                 lb.Background = (System.Windows.Media.Brush)bc.ConvertFrom("#2C4566");
                 lb.Foreground = System.Windows.Media.Brushes.AliceBlue;
                 lb.Content = p;
                 lb.Margin = new Thickness(2, 2, 2, 2);
                 lb.HorizontalAlignment = HorizontalAlignment.Left;
+                lb.MouseLeftButtonDown += (s, e) => {                    
+                    ((StackPanel)this.FindName("fs_grid")).Children.Clear();
+                    currentDirectory = "";
+                    foreach (string a in perc)
+                    {
+                        currentDirectory += a;
+                        if (a == p) break;
+                        currentDirectory += "\\";
+                    } 
+                    updateAddress();
+                    addCurrentFoderInfo(currentDirectory);
+                };
+
                 sp.Children.Add(lb);
             } 
          
@@ -221,13 +245,14 @@ namespace PDS_Client
         private void MouseFolderButtonDownHandler(object sender, MouseButtonEventArgs e)
         {
 
-            ((StackPanel)this.FindName("fs_grid")).Children.Clear(); // remove all childs        
+            ((StackPanel)this.FindName("fs_grid")).Children.Clear(); // remove all childs
             Panel p = (Panel)sender;
             TextBlock lblDirectory = (TextBlock)p.Children[1];            
             string newDir = (string)(lblDirectory).Text;
-            currentDirectory += ("\\" + newDir);
+            currentDirectory += ("\\" + newDir);            
             updateAddress();
             addCurrentFoderInfo(currentDirectory);
+            
         }
 
 
@@ -235,6 +260,63 @@ namespace PDS_Client
             //  Grid.SetColumnSpan((UIElement)this.FindName("fs_grid"), 1);
             if (flag == false) return;
             ((UIElement)this.FindName("details_container")).Visibility = Visibility.Visible;
+            // i start here a thread in order to download the versions of this file
+            /*
+            string filename = (string)((Label)((StackPanel)sender).Children[1]).Content;
+            
+
+            Thread downloader = new Thread( () =>
+           {
+               Debug.WriteLine("Into downloader (versions) thread");
+               s.Send(BitConverter.GetBytes(5)); // GET FILE VERSIONS
+
+               string pathToSend = currentDirectory + "\\" + filename;
+               s.Send(BitConverter.GetBytes(pathToSend.Length));
+               s.Send(Encoding.ASCII.GetBytes(pathToSend));
+
+               byte[] dim = new byte[4]; // just the space for an int
+               if(s.Receive(dim) != 4)
+               {
+                   Debug.WriteLine("did not receive a valid number");
+                   return;
+               }
+               if(BitConverter.ToInt32(dim, 0) < 0)
+               {
+                   // an error server side has occurred!
+                   Debug.WriteLine("dim of versions < 0");
+                   return;
+               }
+               byte[] buff = new byte[BitConverter.ToInt32(dim, 0)];
+               s.Receive(buff); // receive json
+
+               string versions = Encoding.ASCII.GetString(buff);
+
+               Debug.WriteLine(versions);
+
+               List<JSONVersion> items = JsonConvert.DeserializeObject<List<JSONVersion>>(versions);
+
+               foreach (JSONVersion v in items)
+               {
+                   Debug.WriteLine("v.date = " + v.date);
+                   Dispatcher.Invoke(()=>
+                   {
+                       TextBlock line = new TextBlock();
+                       line.Text = v.date;
+
+                       line.Foreground = new SolidColorBrush(Colors.AliceBlue);
+                       line.TextWrapping = TextWrapping.Wrap;
+                       line.TextAlignment = TextAlignment.Center;
+                       line.Name = "lbl_folder_name";
+                       ((Panel)FindName("panel_details")).Children.Add(line);
+                       Debug.WriteLine("inserted the new line -> " + line.Text);
+                   });
+               }
+               return;
+           }
+            );
+            downloader.Start();
+            
+    */
             Storyboard sb = (Storyboard)((Grid)this.FindName("fs_container")).FindResource("key_details_animation");
 
 
@@ -249,7 +331,6 @@ namespace PDS_Client
             sb.Begin();
 
             e.Handled = true;
-
         }
 
        
@@ -279,7 +360,7 @@ namespace PDS_Client
                 panel.HorizontalAlignment = HorizontalAlignment.Center;
                 panel.Orientation = Orientation.Vertical;
                 panel.MouseLeftButtonDown += MouseFolderButtonDownHandler;
-
+               
 
                 System.Windows.Controls.Image img_folder = new System.Windows.Controls.Image();
                 img_folder.Source = new BitmapImage(new Uri(@"\images\folderIcon.png", UriKind.RelativeOrAbsolute));
@@ -317,7 +398,7 @@ namespace PDS_Client
                     hpanel.Orientation = Orientation.Horizontal;
                     hpanel.Margin = new Thickness(5, 5, 0, 0);
                 };
-
+               
                 i++;
                 StackPanel panel = new StackPanel();
                 panel.Width = 100;
@@ -347,8 +428,8 @@ namespace PDS_Client
                 lbl_file_name.Name = "lbl_folder_name";
                 lbl_file_name.Text = file.Split('\\')[file.Split('\\').Length - 1];
                 panel.Children.Add(lbl_file_name);
-
-
+           
+       
                 hpanel.Children.Add(panel);
                 if (((i - 1) % rowElements) == 0) g.Children.Add(hpanel);
             }
