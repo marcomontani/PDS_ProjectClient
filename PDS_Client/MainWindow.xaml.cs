@@ -15,6 +15,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using System.Diagnostics;
 using System.Threading;
+using System.Drawing;
 
 namespace PDS_Client
 {
@@ -36,11 +37,13 @@ namespace PDS_Client
         Socket s;
         int rowElements;
         string currentDirectory;
+        string root;
         bool flag = true;
 
         public MainWindow()
         {
             InitializeComponent();
+            ((UIElement)this.FindName("details_container")).Visibility = Visibility.Collapsed;
             currentDirectory = "C:";           
             watchFolder();
             rowElements = 9;
@@ -48,13 +51,48 @@ namespace PDS_Client
             {
                 ((StackPanel)FindName("fs_grid")).Children.Clear();
                 double d = ((StackPanel)FindName("fs_grid")).ActualWidth;
-
+                root = ""+currentDirectory;
                 rowElements = (int)(d / 100) + 1;
                 addCurrentFoderInfo(currentDirectory);
+                updateAddress();
+                
             };
+            // <Label x:Name="label" Background="#2C4566" Foreground="AliceBlue" Content="C:\\" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="2,2,0,0"/>
+         
 
         }
 
+        public void updateAddress()
+        {
+            StackPanel sp = ((StackPanel)FindName("address"));
+            sp.Children.Clear();
+            var bc = new BrushConverter();
+            int num_base = root.Split('\\').Length;
+            string [] perc = currentDirectory.Split('\\');
+            int counter = 0;
+            Label rt = new Label();
+            rt.Background = System.Windows.Media.Brushes.DarkGreen;
+            rt.Foreground = System.Windows.Media.Brushes.AliceBlue;
+            rt.Content = root;
+            rt.Margin = new Thickness(2, 2, 2, 2);
+            rt.HorizontalAlignment = HorizontalAlignment.Left;
+            sp.Children.Add(rt);
+            foreach (string p in perc)
+            {
+                
+                if (counter++ < num_base ) continue;             
+                Label lb = new Label();
+                lb.Background = (System.Windows.Media.Brush)bc.ConvertFrom("#2C4566");
+                lb.Foreground = System.Windows.Media.Brushes.AliceBlue;
+                lb.Content = p;
+                lb.Margin = new Thickness(2, 2, 2, 2);
+                lb.HorizontalAlignment = HorizontalAlignment.Left;
+                sp.Children.Add(lb);
+            } 
+         
+
+
+        }
 
         public void sync()
         {
@@ -183,11 +221,12 @@ namespace PDS_Client
         private void MouseFolderButtonDownHandler(object sender, MouseButtonEventArgs e)
         {
 
-            ((StackPanel)this.FindName("fs_grid")).Children.Clear(); // remove all childs
+            ((StackPanel)this.FindName("fs_grid")).Children.Clear(); // remove all childs        
             Panel p = (Panel)sender;
             TextBlock lblDirectory = (TextBlock)p.Children[1];            
             string newDir = (string)(lblDirectory).Text;
-            currentDirectory += ("\\" + newDir);            
+            currentDirectory += ("\\" + newDir);
+            updateAddress();
             addCurrentFoderInfo(currentDirectory);
         }
 
@@ -240,9 +279,9 @@ namespace PDS_Client
                 panel.HorizontalAlignment = HorizontalAlignment.Center;
                 panel.Orientation = Orientation.Vertical;
                 panel.MouseLeftButtonDown += MouseFolderButtonDownHandler;
-               
 
-                Image img_folder = new Image();
+
+                System.Windows.Controls.Image img_folder = new System.Windows.Controls.Image();
                 img_folder.Source = new BitmapImage(new Uri(@"\images\folderIcon.png", UriKind.RelativeOrAbsolute));
 
                 img_folder.Width = 50;
@@ -266,31 +305,52 @@ namespace PDS_Client
                 if (((i-1) % rowElements) == 0)g.Children.Add(hpanel);
             }
 
+            i = rowElements;
 
 
             foreach (string file in Directory.GetFiles(path))
             {
-               
+                if ((i % rowElements) == 0)
+                {
+                    hpanel = new StackPanel();
+                    hpanel.VerticalAlignment = VerticalAlignment.Center;
+                    hpanel.Orientation = Orientation.Horizontal;
+                    hpanel.Margin = new Thickness(5, 5, 0, 0);
+                };
+
+                i++;
                 StackPanel panel = new StackPanel();
+                panel.Width = 100;
+                panel.Height = 85;
                 panel.Name = "file_panel";
                 panel.VerticalAlignment = VerticalAlignment.Center;
-                panel.Orientation = Orientation.Horizontal;
+                panel.HorizontalAlignment = HorizontalAlignment.Center;
+                panel.Orientation = Orientation.Vertical;
                 panel.MouseLeftButtonDown += MouseFileButtonDownHandler;
-                panel.Width = 150;
-                Image img_file = new Image();
+
+
+                System.Windows.Controls.Image img_file = new System.Windows.Controls.Image();
                 img_file.Source = new BitmapImage(new Uri(@"\images\fileIcon.png", UriKind.RelativeOrAbsolute));
+
                 img_file.Width = 50;
                 img_file.Height = 50;
-
                 panel.Children.Add(img_file);
 
 
-                Label lbl_file_name = new Label();
-                lbl_file_name.Content = file.Split('\\')[file.Split('\\').Length - 1]; ;
+                TextBlock lbl_file_name = new TextBlock();
+
+                lbl_file_name.MaxWidth = 85;
+                lbl_file_name.MinWidth = 40;
+                lbl_file_name.TextWrapping = TextWrapping.Wrap;
+                lbl_file_name.TextAlignment = TextAlignment.Center;
+
+                lbl_file_name.Name = "lbl_folder_name";
+                lbl_file_name.Text = file.Split('\\')[file.Split('\\').Length - 1];
                 panel.Children.Add(lbl_file_name);
-           
-       
-                g.Children.Add(panel);
+
+
+                hpanel.Children.Add(panel);
+                if (((i - 1) % rowElements) == 0) g.Children.Add(hpanel);
             }
 
         }
