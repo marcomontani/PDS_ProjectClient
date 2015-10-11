@@ -58,8 +58,14 @@
         <Rectangle x:Name="rect_header" Grid.Row="0" Grid.Column="0" Fill="#111221" Margin="0,0,0,1" Grid.ColumnSpan="7" MouseDown="mouse_MouseDown"/>
 
         <DockPanel Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="6" x:Name="details_container" Margin="0,0,0,0"    >
-            <StackPanel x:Name="panel_details" Background="#FF1E1E27" Margin="0,-1,0,0" Orientation="Vertical" Visibility="Visible">
+            <StackPanel Background="#FF1E1E27" Margin="0,-1,0,0" Orientation="Vertical" Visibility="Visible">
                 <TextBlock Text="VERSIONI" FontSize="24" Foreground="AliceBlue"  TextOptions.TextFormattingMode="Display" FontWeight="SemiBold" VerticalAlignment="Top" TextAlignment="Center" HorizontalAlignment="Left" Margin="100,20,0,0"/>
+                <ScrollViewer>
+                    <StackPanel x:Name="panel_details" Background="#FF1E1E27" Margin="0,-1,0,0" Orientation="Vertical" Visibility="Visible">
+                        
+                    </StackPanel>
+                </ScrollViewer>
+                
             </StackPanel>
         </DockPanel>
         <Rectangle x:Name="rect_header_Copy1" Grid.Row="2" Grid.Column="0" Fill="#111221" Grid.ColumnSpan="7" MouseDown="mouse_MouseDown" Margin="-2,0,-2,-2"/>

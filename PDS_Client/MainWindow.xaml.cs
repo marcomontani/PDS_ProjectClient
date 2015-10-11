@@ -259,10 +259,11 @@ namespace PDS_Client
         private void MouseFileButtonDownHandler(object sender, RoutedEventArgs e) {
             //  Grid.SetColumnSpan((UIElement)this.FindName("fs_grid"), 1);
             if (flag == false) return;
+
             ((UIElement)this.FindName("details_container")).Visibility = Visibility.Visible;
             // i start here a thread in order to download the versions of this file
-            /*
-            string filename = (string)((Label)((StackPanel)sender).Children[1]).Content;
+            ((StackPanel)this.FindName("panel_details")).Children.Clear();
+            string filename = (string)((TextBlock)((StackPanel)sender).Children[1]).Text;
             
 
             Thread downloader = new Thread( () =>
@@ -316,7 +317,7 @@ namespace PDS_Client
             );
             downloader.Start();
             
-    */
+    
             Storyboard sb = (Storyboard)((Grid)this.FindName("fs_container")).FindResource("key_details_animation");
 
 
