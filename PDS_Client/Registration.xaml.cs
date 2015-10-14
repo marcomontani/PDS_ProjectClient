@@ -269,7 +269,15 @@ namespace PDS_Client
                     message = Encoding.ASCII.GetString(buffer);
                     if (message.Contains("ERR"))
                     {
-                        MessageBox.Show("Errore nella password", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show("Errore nel path", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        break;
+                    }
+
+                    r = socket.Receive(buffer);
+                    message = Encoding.ASCII.GetString(buffer);
+                    if (message.Contains("ERR"))
+                    {
+                        MessageBox.Show("Errore:impossibile creare il nuovo utente", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         break;
                     }
 
@@ -277,7 +285,8 @@ namespace PDS_Client
                     mw.setSocket(socket);
                     mw.setCurrentDirectory(path);
                     mw.Show();
-                    mw.updateFolders();
+                    //mw.updateFolders();
+                    mw.sync();
                     this.Close();
 
    

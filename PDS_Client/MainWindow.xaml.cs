@@ -120,6 +120,7 @@ namespace PDS_Client
 
         public void sync()
         {
+            Debug.WriteLine("sync called");
             Thread t = new Thread(syncFolder);
             t.Start();
         }
@@ -287,7 +288,11 @@ namespace PDS_Client
                    Debug.WriteLine("dim of versions < 0");
                    return;
                }
-               byte[] buff = new byte[BitConverter.ToInt32(dim, 0)];
+               else
+                   Debug.WriteLine("dim = " + BitConverter.ToInt32(dim, 0));
+
+
+               byte[] buff = new byte[BitConverter.ToInt32(dim, 0)+1];
                s.Receive(buff); // receive json
 
                string versions = Encoding.ASCII.GetString(buff);
