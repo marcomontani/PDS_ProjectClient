@@ -62,19 +62,18 @@
                 <TextBlock Text="VERSIONI" FontSize="24" Foreground="AliceBlue"  TextOptions.TextFormattingMode="Display" FontWeight="SemiBold" VerticalAlignment="Top" TextAlignment="Center" HorizontalAlignment="Left" Margin="100,20,0,0"/>
                 <ScrollViewer>
                     <StackPanel x:Name="panel_details" Background="#FF1E1E27" Margin="0,-1,0,0" Orientation="Vertical" Visibility="Visible">
-                        
+
                     </StackPanel>
                 </ScrollViewer>
-                
+
             </StackPanel>
         </DockPanel>
         <Rectangle x:Name="rect_header_Copy1" Grid.Row="2" Grid.Column="0" Fill="#111221" Grid.ColumnSpan="7" MouseDown="mouse_MouseDown" Margin="-2,0,-2,-2"/>
         <Label Foreground="AliceBlue" Content="© PoliHub 2014 - 2015" Grid.Row="2" Grid.ColumnSpan="3" Margin="4,2,46,2" FontSize="10.667" FontWeight="SemiBold" />
-        <Image x:Name="image" HorizontalAlignment="Left" Height="47" Margin="12,5,0,0" VerticalAlignment="Top" Width="49" Source="images/polihub2.png"/>
+        <Image x:Name="image" HorizontalAlignment="Left" Height="66" Margin="12,5,0,0" VerticalAlignment="Top" Width="66" Source="images/polihub2.png"/>
         <Button x:Name="btn_x" Content="X" Grid.Column="6" HorizontalAlignment="Left" Margin="19,1,0,0" VerticalAlignment="Top" Width="28" Height="27" Background="#111221" Foreground="WhiteSmoke" BorderThickness="0" Click="mouse_x_click"/>
-        <StackPanel Orientation="Horizontal" Background="WhiteSmoke" HorizontalAlignment="Left" Height="30" Margin="88,35,0,0" VerticalAlignment="Top" Width="862" Grid.ColumnSpan="7" Name="address">
-           
-        </StackPanel>
-
+        <ScrollViewer x:Name ="scrolladd"  HorizontalScrollBarVisibility="Hidden" Background="WhiteSmoke" VerticalScrollBarVisibility="Disabled"  Width="862" Grid.ColumnSpan="7" Margin="88,24,46.8,10">
+            <StackPanel  Orientation="Horizontal"  HorizontalAlignment="Left"  Height="30" VerticalAlignment="Stretch"  Name="address" />
+        </ScrollViewer>
     </Grid>
 </Window>

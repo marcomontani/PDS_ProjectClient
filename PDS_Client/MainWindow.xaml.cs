@@ -78,15 +78,29 @@ namespace PDS_Client
             Label rt = new Label();
             rt.Background = System.Windows.Media.Brushes.DarkGreen;
             rt.Foreground = System.Windows.Media.Brushes.AliceBlue;
+            rt.BorderThickness = new Thickness(2, 2, 2, 2);
+            rt.BorderBrush = System.Windows.Media.Brushes.LightGray;
             rt.Content = root;
-            rt.Margin = new Thickness(2, 2, 2, 2);
+            rt.VerticalContentAlignment = VerticalAlignment.Center;
             rt.HorizontalAlignment = HorizontalAlignment.Left;
-            rt.MouseLeftButtonDown += (s, e) => {
+            rt.MouseLeftButtonDown += (s, e) => {                
                 ((StackPanel)this.FindName("fs_grid")).Children.Clear();
                 currentDirectory = root;
                 updateAddress();
                 addCurrentFoderInfo(root);
             };
+            rt.MouseEnter += (s, e) =>
+            {
+                ((Label)s).Background = System.Windows.Media.Brushes.LightGreen;
+                ((Label)s).BorderBrush = System.Windows.Media.Brushes.White;
+            };
+            rt.MouseLeave += (s, e) =>
+            {
+                ((Label)s).Background = System.Windows.Media.Brushes.DarkGreen;
+                
+            };
+
+    
             sp.Children.Add(rt);
             
             foreach (string p in perc)
@@ -96,7 +110,9 @@ namespace PDS_Client
                 lb.Background = (System.Windows.Media.Brush)bc.ConvertFrom("#2C4566");
                 lb.Foreground = System.Windows.Media.Brushes.AliceBlue;
                 lb.Content = p;
-                lb.Margin = new Thickness(2, 2, 2, 2);
+                lb.VerticalContentAlignment = VerticalAlignment.Center;
+                lb.BorderThickness = new Thickness(2, 2, 2, 2); 
+                lb.BorderBrush = System.Windows.Media.Brushes.LightGray;
                 lb.HorizontalAlignment = HorizontalAlignment.Left;
                 lb.MouseLeftButtonDown += (s, e) => {                    
                     ((StackPanel)this.FindName("fs_grid")).Children.Clear(); 
@@ -110,11 +126,37 @@ namespace PDS_Client
                     updateAddress();
                     addCurrentFoderInfo(currentDirectory);
                 };
+                lb.MouseEnter += (s, e) =>
+                {
+                    ((Label)s).Background = System.Windows.Media.Brushes.LightBlue;
+                    ((Label)s).BorderBrush = System.Windows.Media.Brushes.White;
+                };
+                lb.MouseLeave += (s, e) =>
+                {
+                    ((Label)s).Background = (System.Windows.Media.Brush)bc.ConvertFrom("#2C4566"); 
 
+                };
                 sp.Children.Add(lb);
-            } 
-         
-
+            }
+            double addrWidth = 0;
+            
+            foreach (Label c in sp.Children)
+            {
+                c.UpdateLayout();
+                addrWidth += c.ActualWidth; 
+            }
+            sp.UpdateLayout();
+            var scr = ((ScrollViewer)this.FindName("scrolladd"));
+            if (addrWidth > scr.Width)
+            {
+                scr.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible;
+                scr.Height = 50;
+            }
+            else
+            {
+                ((ScrollViewer)this.FindName("scrolladd")).HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
+                scr.Height = 30;
+            }
 
         }
 
