@@ -28,12 +28,23 @@ namespace PDS_Client
     {
         public string file;
         public WatcherChangeTypes type;
+
+        public override bool Equals(object o)
+        {
+            if (o == null) return false;
+            if (o.GetType() != this.GetType()) return false;
+            queueObject other = (queueObject)o;
+
+            return (other.file.Equals(this.file) && other.type.Equals(this.type));
+        }
     }
 
 
     public partial class MainWindow : Window
     {
         Queue<queueObject> eventsArray = new Queue<queueObject>();
+        Mutex events_semaphore;
+
         Socket s;
         int rowElements;
         string currentDirectory;
@@ -45,8 +56,8 @@ namespace PDS_Client
         {
             InitializeComponent();
             ((UIElement)this.FindName("details_container")).Visibility = Visibility.Collapsed;
-            currentDirectory = "C:";           
-            watchFolder();
+            currentDirectory = "C:";
+            events_semaphore = new Mutex();
             rowElements = 9;
             ((StackPanel)FindName("fs_grid")).SizeChanged += (s, e) =>
             {
@@ -60,7 +71,7 @@ namespace PDS_Client
                 rowElements = (int)(d / 100) + 1;
                 addCurrentFoderInfo(currentDirectory);
                 updateAddress();
-                
+                NetworkHandler.createInstance(this.s);
             };
             // <Label x:Name="label" Background="#2C4566" Foreground="AliceBlue" Content="C:\\" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="2,2,0,0"/>
 
@@ -121,8 +132,7 @@ namespace PDS_Client
         public void sync()
         {
             Debug.WriteLine("sync called");
-            Thread t = new Thread(syncFolder);
-            t.Start();
+            NetworkHandler.getInstance().addFunction(syncFolder);
         }
 
         private void syncFolder()
@@ -161,7 +171,7 @@ namespace PDS_Client
                     {
                         sendFileToServer(file);
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         MessageBox.Show("Impossibile inviare il file " + file + " al server", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         Debug.WriteLine("Impossibile inviare il file " + file + " al server");
@@ -173,30 +183,31 @@ namespace PDS_Client
 
         private void sendFileToServer(string path)
         {
-            s.Send(BitConverter.GetBytes(2)); // UPLOAD FILE
-            s.Send(Encoding.ASCII.GetBytes(path));
+            NetworkHandler.getInstance().addFunction ( () => {
+                s.Send(BitConverter.GetBytes(2)); // UPLOAD FILE
+                s.Send(Encoding.ASCII.GetBytes(path));
 
-            byte[] inBuff = new byte[1024];
-            s.Receive(inBuff);
-            if (!Encoding.ASCII.GetString(inBuff).Contains("OK")) throw new Exception("error: filename sent but error was returned");
+                byte[] inBuff = new byte[1024];
+                s.Receive(inBuff);
+                if (!Encoding.ASCII.GetString(inBuff).Contains("OK")) throw new Exception("error: filename sent but error was returned");
 
-            
-            long dimension = (new FileInfo(path)).Length;
-            if (dimension > Int32.MaxValue) throw new Exception("error: file dimension too big! > 32 bit");
-            int dim = (int)dimension;
 
-            s.Send(BitConverter.GetBytes(dim));
+                long dimension = (new FileInfo(path)).Length;
+                if (dimension > Int32.MaxValue) throw new Exception("error: file dimension too big! > 32 bit");
+                int dim = (int)dimension;
 
-            s.Send(File.ReadAllBytes(path));
-            
-            s.Receive(inBuff);
-            if (!Encoding.ASCII.GetString(inBuff).Contains("OK")) throw new Exception("error: file not uploaded correctly");
-            
-            // todo: calculate and send sha1 checksum
-            SHA1 shaProvider = SHA1.Create();
-            shaProvider.ComputeHash(new FileStream(path, FileMode.Open));
-            s.Send(shaProvider.Hash);
+                s.Send(BitConverter.GetBytes(dim));
 
+                s.Send(File.ReadAllBytes(path));
+
+                s.Receive(inBuff);
+                if (!Encoding.ASCII.GetString(inBuff).Contains("OK")) throw new Exception("error: file not uploaded correctly");
+
+                // todo: calculate and send sha1 checksum
+                SHA1 shaProvider = SHA1.Create();
+                shaProvider.ComputeHash(new FileStream(path, FileMode.Open));
+                s.Send(shaProvider.Hash);
+            });
         }
 
         
@@ -210,7 +221,9 @@ namespace PDS_Client
         private void watchFolder()
         {
             FileSystemWatcher fs = new FileSystemWatcher(currentDirectory);
+            
             fs.Changed += new FileSystemEventHandler(OnChanged);
+            fs.IncludeSubdirectories = true;
             fs.NotifyFilter = NotifyFilters.LastWrite;
             fs.EnableRaisingEvents = true;
 
@@ -219,9 +232,27 @@ namespace PDS_Client
         private void OnChanged(object source, FileSystemEventArgs e)
         {
             // Specify what is done when a file is changed, created, or deleted.
-            MessageBox.Show("File: " + e.FullPath + " " + e.ChangeType);
-            queueObject q; q.file = e.FullPath; q.type = e.ChangeType;
-            if (!this.eventsArray.Contains(q)) eventsArray.Enqueue(q);
+            //MessageBox.Show("File: " + e.FullPath + " " + e.ChangeType);
+            Monitor.Enter(events_semaphore);
+            queueObject q = new queueObject();
+            q.file = e.FullPath; q.type = e.ChangeType;
+            if (!eventsArray.Contains(q)) eventsArray.Enqueue(q);
+            Monitor.Exit(events_semaphore);
+
+
+            Thread t = new Thread(() =>
+            {
+                Thread.Sleep(5); // to avoid duplicated changes (known bug of the filesystewatcher)
+                Monitor.Enter(events_semaphore);
+                if(eventsArray.Count > 0)
+                {
+                    queueObject obj = eventsArray.Dequeue();
+                    if(obj.type == WatcherChangeTypes.Changed || obj.type == WatcherChangeTypes.Created) sendFileToServer(obj.file);
+                }
+                Monitor.Exit(events_semaphore);
+            });
+            t.Start();
+            
         }
 
         private void mouse_MouseDown(object sender, MouseButtonEventArgs e)
@@ -230,7 +261,7 @@ namespace PDS_Client
             //if (sender.GetType().FullName=="StackPanel") M
             try {
                 this.DragMove();
-            }catch(InvalidOperationException ioe)
+            }catch(InvalidOperationException)
             {
                 // this means that someone has already cought the mousedown event. probably i did not want to move the window
             }
@@ -240,6 +271,11 @@ namespace PDS_Client
         {
             // todo: send to try bar
             this.Close();
+
+            /* CODICE PROVVISORIO*/
+            NetworkHandler.getInstance().killWorkers();
+            NetworkHandler.deleteInstance();
+
         }
 
 
@@ -267,7 +303,7 @@ namespace PDS_Client
             string filename = (string)((TextBlock)((StackPanel)sender).Children[1]).Text;
             
 
-            Thread downloader = new Thread( () =>
+            NetworkHandler.getInstance().addFunction( () =>
            {
                Debug.WriteLine("Into downloader (versions) thread");
                s.Send(BitConverter.GetBytes(5)); // GET FILE VERSIONS
@@ -275,6 +311,8 @@ namespace PDS_Client
                string pathToSend = currentDirectory + "\\" + filename;
                s.Send(BitConverter.GetBytes(pathToSend.Length));
                s.Send(Encoding.ASCII.GetBytes(pathToSend));
+               Debug.WriteLine("sent " + pathToSend);
+
 
                byte[] dim = new byte[4]; // just the space for an int
                if(s.Receive(dim) != 4)
@@ -282,7 +320,7 @@ namespace PDS_Client
                    Debug.WriteLine("did not receive a valid number");
                    return;
                }
-               if(BitConverter.ToInt32(dim, 0) < 0)
+               if(BitConverter.ToInt32(dim, 0) <= 0)
                {
                    // an error server side has occurred!
                    Debug.WriteLine("dim of versions < 0");
@@ -320,7 +358,7 @@ namespace PDS_Client
                return;
            }
             );
-            downloader.Start();
+            
             
     
             Storyboard sb = (Storyboard)((Grid)this.FindName("fs_container")).FindResource("key_details_animation");
@@ -454,6 +492,7 @@ namespace PDS_Client
             Debug.Print("Main Window: setCurrentDirectory(" + currDir + ")");
             currentDirectory = currDir;
             Debug.Print("Main Window: current directory = " + currentDirectory);
+            watchFolder();
         }
 
    
