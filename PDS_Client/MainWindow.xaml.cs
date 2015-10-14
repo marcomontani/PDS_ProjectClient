@@ -52,6 +52,10 @@ namespace PDS_Client
         bool first = true;
         bool flag = true;
 
+        string selectedFile;
+
+
+
         public MainWindow()
         {
             InitializeComponent();
@@ -252,7 +256,84 @@ namespace PDS_Client
             });
         }
 
-        
+        private void downloadFile(string path, string version)
+        {
+            // sending path
+            s.Send(BitConverter.GetBytes(path.Length));
+            s.Send(Encoding.ASCII.GetBytes(path));
+            // check if it's ok
+            byte[] buffer = new byte[1024];
+            int ricevuti = s.Receive(buffer);
+            buffer[ricevuti] = (byte)'\0';
+            string msg = Encoding.ASCII.GetString(buffer);
+            if (ricevuti != 2 || !msg.Contains("OK")) // there was an error
+            {
+                MessageBox.Show("Errore: Impossibile mandare il nome del file correttamente", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            // sending path
+            s.Send(BitConverter.GetBytes(version.Length));
+            s.Send(Encoding.ASCII.GetBytes(version));
+            // check if it's ok
+            ricevuti = s.Receive(buffer);
+            buffer[ricevuti] = (byte)'\0';
+            msg = Encoding.ASCII.GetString(buffer);
+            if (ricevuti != 2 || !msg.Contains("OK")) // there was an error
+            {
+                MessageBox.Show("Errore: Impossibile mandare la versione del file correttamente", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            // now i need to read the dimension of the file
+            ricevuti = s.Receive(buffer);
+            if (ricevuti != 4)
+            {
+                MessageBox.Show("Errore: La dimensione del file è arrivata corrotta", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            int fDim = BitConverter.ToInt32(buffer, 0);
+            if(fDim <= 0)
+            {
+                MessageBox.Show("Errore: La dimensione del file è negativa", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            FileStream stream = new FileStream(path, FileMode.Create);
+            // todo: maybe it is better to use a tmp file, download and check the checksum. if all is ok overwrite on path!
+            while(fDim > 0)
+            {
+                ricevuti = s.Receive(buffer);
+                stream.Write(buffer, 0, ricevuti);
+                fDim -= ricevuti;
+            }
+
+            ricevuti = s.Receive(buffer); // this is server hash
+            SHA1 shaProvider = SHA1.Create();
+            shaProvider.ComputeHash(new FileStream(path, FileMode.Open));
+            byte[] chash = shaProvider.Hash;
+
+            bool equal = true;
+            for (int i = 0; i < ricevuti && equal; i++)
+            {
+                if ((byte)buffer[i] != chash[i]) equal = false;
+            }
+
+            if (equal) s.Send(Encoding.ASCII.GetBytes("OK"));
+            else s.Send(Encoding.ASCII.GetBytes("ERR"));
+
+            ricevuti = s.Receive(buffer);
+            buffer[ricevuti] = 0;
+            if (Encoding.ASCII.GetString(buffer).Contains("OK"))
+                // todo: here i should overwrite the file on path
+                return;
+            else
+            {
+                MessageBox.Show("Errore, impossibile tornare alla versione del file del " + version, "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+        }
 
         public void setSocket(Socket sock)
         {
@@ -343,7 +424,7 @@ namespace PDS_Client
             // i start here a thread in order to download the versions of this file
             ((StackPanel)this.FindName("panel_details")).Children.Clear();
             string filename = (string)((TextBlock)((StackPanel)sender).Children[1]).Text;
-            
+            this.selectedFile = currentDirectory + "\\" + filename;
 
             NetworkHandler.getInstance().addFunction( () =>
            {
@@ -541,6 +622,7 @@ namespace PDS_Client
         private void closeVersions(object sender, MouseButtonEventArgs e)
         {
             if (flag == false) return;
+            selectedFile = null;
             int span = Grid.GetColumnSpan((UIElement)this.FindName("fs_grid"));
             if (span == 7 && flag) return;
             Storyboard sb = (Storyboard)((Grid)this.FindName("fs_container")).FindResource("key_details_animation_close");
