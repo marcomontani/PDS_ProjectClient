@@ -74,8 +74,7 @@ namespace PDS_Client
             s.Receive(buffer);
             string message = Encoding.ASCII.GetString(buffer);
             if (message.Contains("OK")) { 
-                MainWindow main = new MainWindow();
-                main.setSocket(s);
+                
 
                 string path = null;
                 s.Send(BitConverter.GetBytes(9));
@@ -99,6 +98,9 @@ namespace PDS_Client
 
                 Debug.Print("after delete: " + path);
 
+
+                MainWindow main = new MainWindow();
+                main.setSocket(s);
                 main.setCurrentDirectory(path);
                 main.updateFolders();
                 main.Show();
