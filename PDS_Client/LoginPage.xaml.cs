@@ -46,13 +46,24 @@ namespace PDS_Client
             catch(SocketException se)
             {
                 MessageBox.Show(se.Message);
+                throw;
             }
             
         }
 
         private void btn_login_Click(object sender, RoutedEventArgs e)
         {
-            if (s == null) createSocket(); // the socket is already connected
+            if (s == null)
+            {
+                try {
+                    createSocket(); // the socket is already connected
+                }
+                catch (SocketException)
+                {
+                    s = null;
+                    return; // i already printed the error for the user. now i just do nothing 
+                }
+            }
             
             string username = ((TextBox)this.FindName("text_user")).Text;
             string password = ((PasswordBox)this.FindName("text_pass")).Password;

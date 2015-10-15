@@ -30,9 +30,9 @@ namespace PDS_Client
             fsemaphore = new Mutex();
             d_semaphore = new Mutex();
             s = cs;
-            threads = new Thread[3];
+            threads = new Thread[1];
             functions = new Queue<Action>();
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 1; i++)
             {
                 threads[i] = new Thread(() => {
                     Monitor.Enter(d_semaphore);
