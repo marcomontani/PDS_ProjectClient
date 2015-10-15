@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Net.Sockets;
+using System.Diagnostics;
 
 namespace PDS_Client
 {
@@ -43,7 +44,24 @@ namespace PDS_Client
                     while (!value)
                     {
                         Monitor.Enter(fsemaphore);
-                        while (functions.Count == 0) Monitor.Wait(fsemaphore);
+                        while (functions.Count == 0)
+                        {
+                            Monitor.Wait(fsemaphore);
+                            // i am awake. do i still need to live?
+                            Debug.Write("This thread has been awaken");
+                            Monitor.Enter(d_semaphore);
+                            value = die;
+                            Monitor.Exit(d_semaphore);
+
+
+
+                            if (value)
+                            {
+                                Debug.WriteLine("and has to die");
+                                return;
+                            }
+
+                        }
                         Action f = functions.Dequeue();
                         Monitor.Exit(fsemaphore);
                         f();
@@ -85,9 +103,17 @@ namespace PDS_Client
 
         public void killWorkers()
         {
+            Debug.WriteLine("killing all the workers");
             Monitor.Enter(d_semaphore);
             die = true;
+            Debug.WriteLine("told them to die");
             Monitor.Exit(d_semaphore);
+
+            Monitor.Enter(fsemaphore);
+            Monitor.PulseAll(fsemaphore);
+            Debug.WriteLine("should awake them now");
+            Monitor.Exit(fsemaphore);
+
         }
 
 
