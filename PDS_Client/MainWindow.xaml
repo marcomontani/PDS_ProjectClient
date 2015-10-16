@@ -59,9 +59,9 @@
 
         <DockPanel Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="6" x:Name="details_container" Margin="0,0,0,0"    >
             <StackPanel Background="#FF1E1E27" Margin="0,-1,0,0" Orientation="Vertical" Visibility="Visible">
-                <TextBlock Text="VERSIONI" FontSize="24" Foreground="AliceBlue"  TextOptions.TextFormattingMode="Display" FontWeight="SemiBold" VerticalAlignment="Top" TextAlignment="Center" HorizontalAlignment="Left" Margin="100,20,0,0"/>
-                <ScrollViewer>
-                    <StackPanel x:Name="panel_details" Background="#FF1E1E27" Margin="0,-1,0,0" Orientation="Vertical" Visibility="Visible">
+                <TextBlock Text="VERSIONI" FontSize="24" Foreground="AliceBlue"  TextOptions.TextFormattingMode="Display" FontWeight="SemiBold" VerticalAlignment="Top" TextAlignment="Center" HorizontalAlignment="Left" Margin="100,20,0,20"/>
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Height="631"   >
+                    <StackPanel x:Name="panel_details" Margin="0,0,0,0" Orientation="Vertical" Visibility="Visible">
 
                     </StackPanel>
                 </ScrollViewer>

@@ -23,6 +23,8 @@ namespace PDS_Client
     /// Logica di interazione per MainWindow.xaml
     /// </summary>
     /// 
+    
+    
 
     struct queueObject
     {
@@ -51,6 +53,7 @@ namespace PDS_Client
         string root;
         bool first = true;
         bool flag = true;
+        string[] months = { "GEN", "FEB","MAR","APR","MAG","GIU","LUG","AGO","SET","OTT","NOV","DIC"};
 
         string selectedFile;
 
@@ -430,9 +433,9 @@ namespace PDS_Client
 
             NetworkHandler.getInstance().addFunction( () =>
            {
+
                Debug.WriteLine("Into downloader (versions) thread");
                s.Send(BitConverter.GetBytes(5)); // GET FILE VERSIONS
-
                string pathToSend = currentDirectory + "\\" + filename;
                s.Send(BitConverter.GetBytes(pathToSend.Length));
                s.Send(Encoding.ASCII.GetBytes(pathToSend));
@@ -463,21 +466,132 @@ namespace PDS_Client
                Debug.WriteLine(versions);
 
                List<JSONVersion> items = JsonConvert.DeserializeObject<List<JSONVersion>>(versions);
-
+               BrushConverter bc = new BrushConverter();
                foreach (JSONVersion v in items)
                {
                    Debug.WriteLine("v.date = " + v.date);
                    Dispatcher.Invoke(()=>
                    {
+                       /*
+                        <Border  Background="#111221" BorderThickness="1" Height="80">
+                        <StackPanel Orientation="Horizontal"  >
+                                <StackPanel Background="#D2691E" Width="50" HorizontalAlignment="Left" Margin="20,18,0,11">
+                                    <TextBlock Text="2005" FontSize="12" Foreground="#111221"  TextOptions.TextFormattingMode="Display" FontWeight="SemiBold" VerticalAlignment="Stretch" TextAlignment="Center" Height="15" />
+                                    <TextBlock Text="15" FontSize="24" Foreground="#111221" LineStackingStrategy="BlockLineHeight" LineHeight="21" TextOptions.TextFormattingMode="Display" FontWeight="Bold" VerticalAlignment="Top" TextAlignment="Center" Height="20" />
+                                    <TextBlock Text="FEB" FontSize="16" Foreground="#111221" LineStackingStrategy="BlockLineHeight" LineHeight="13"  TextOptions.TextFormattingMode="Display" Padding="0,0,0,0" FontWeight="SemiBold" VerticalAlignment="Stretch" TextAlignment="Center" Height="12" />
+                                </StackPanel>
+                                <TextBlock Text="ORE  17:30" FontSize="20" Foreground="AliceBlue"  TextOptions.TextFormattingMode="Display" FontWeight="SemiBold" VerticalAlignment="Top" TextAlignment="Center" HorizontalAlignment="Left" Margin="35,28,0,0"/>
+                                <Image Source="images/download.png"  Margin="45,10,0,0" Width="30"/>
+                            </StackPanel>
+                        </Border>
+*/
+
+                       string hour_s = v.date.Split(' ')[1];
+                       string year_s = v.date.Split(' ')[0].Split('-')[0];
+                       string month_s = v.date.Split(' ')[0].Split('-')[1];
+                       string day_s = v.date.Split(' ')[0].Split('-')[2];
+
+                       Border brd = new Border();
+                       brd.Background = (System.Windows.Media.Brush)bc.ConvertFrom("#111221");
+                       brd.BorderThickness = new Thickness(1);
+                       brd.Height = 80;
+
+                       StackPanel sline = new StackPanel();
+                       sline.Orientation = Orientation.Horizontal;
+
+                       StackPanel calendar = new StackPanel();
+                       calendar.Background = (System.Windows.Media.Brush)bc.ConvertFrom("#D2691E");
+                       calendar.Width = 50;
+                       calendar.HorizontalAlignment = HorizontalAlignment.Left;
+                       calendar.Margin = new Thickness(20, 18, 0, 11);
+
+
+                       TextBlock year = new TextBlock();
+                       year.FontSize = 12;
+                       year.Foreground = (System.Windows.Media.Brush)bc.ConvertFrom("#111221");
+                       year.FontWeight = FontWeights.SemiBold;
+                       year.VerticalAlignment = VerticalAlignment.Center;
+                       year.TextAlignment = TextAlignment.Center;
+                       year.Height = 15;
+                       year.Text = year_s;
+                      
+
+                       TextBlock day = new TextBlock();
+                       //< TextBlock Text = "15" FontSize = "24" Foreground = "#111221" LineStackingStrategy = 
+                       //"BlockLineHeight" LineHeight = "21" TextOptions.TextFormattingMode = "Display"
+                       //FontWeight = "Bold" VerticalAlignment = "Top" TextAlignment = "Center" Height = "20" />
+                       day.FontSize = 24;
+                       day.Foreground = (System.Windows.Media.Brush)bc.ConvertFrom("#111221");
+                       day.LineStackingStrategy = LineStackingStrategy.BlockLineHeight;
+                       day.LineHeight = 21;
+                       day.FontWeight = FontWeights.Bold;
+                       day.VerticalAlignment = VerticalAlignment.Top;
+                       day.TextAlignment = TextAlignment.Center;
+                       day.Height = 20;
+                       day.Text = day_s;
+                       TextBlock month = new TextBlock();
+                       //< TextBlock Text = "FEB" FontSize = "16" Foreground = "#111221" 
+                       // LineStackingStrategy = "BlockLineHeight" LineHeight = "13"  TextOptions.TextFormattingMode
+                       //  = "Display" Padding = "0,0,0,0" FontWeight = "SemiBold" VerticalAlignment = "Stretch"
+                       //TextAlignment = "Center" Height = "12" />
+                       month.FontSize = 16;
+                       month.Foreground = (System.Windows.Media.Brush)bc.ConvertFrom("#111221");
+                       month.LineStackingStrategy = LineStackingStrategy.BlockLineHeight;
+                       month.LineHeight = 13;
+                       month.FontWeight = FontWeights.SemiBold;
+                       month.VerticalAlignment = VerticalAlignment.Stretch;
+                       month.TextAlignment = TextAlignment.Center;
+                       month.Height = 12;
+                       month.Text = months[Int32.Parse(month_s)];
+
+                       //< TextBlock Text = "ORE  17:30" FontSize = "20" Foreground = "AliceBlue"  
+                       //TextOptions.TextFormattingMode = "Display" FontWeight = "SemiBold" 
+                       //VerticalAlignment = "Top" TextAlignment = "Center" HorizontalAlignment = "Left" 
+                       //Margin = "35,28,0,0" />
+
+                       TextBlock hour = new TextBlock();
+                       hour.FontSize = 20;
+                       hour.Foreground = new SolidColorBrush(Colors.AliceBlue);
+                       //hour.FontWeight = FontWeights.SemiBold;
+                       hour.VerticalAlignment = VerticalAlignment.Top;
+                       hour.TextAlignment = TextAlignment.Center;
+                       hour.HorizontalAlignment = HorizontalAlignment.Left;
+                       hour.Margin = new Thickness(35, 28, 0, 0);
+                       hour.Text = "ORE "+hour_s;
+
+                       //  <Image Source="images/download.png"  Margin="45,10,0,0" Width="30"/>
+                       System.Windows.Controls.Image dwn = new System.Windows.Controls.Image();
+                       dwn.Source = new BitmapImage(new Uri(@"\images\download.png", UriKind.RelativeOrAbsolute));
+                       dwn.Width = 30;
+                       dwn.Margin = new Thickness(45, 10, 0, 0);
+
+                       calendar.Children.Add(year);
+                       calendar.Children.Add(day);
+                       calendar.Children.Add(month);
+
+                       sline.Children.Add(calendar);
+                       sline.Children.Add(hour);
+                       sline.Children.Add(dwn);
+                       brd.Child = sline;
+
+
+                       /*
                        TextBlock line = new TextBlock();
                        line.Text = v.date;
 
                        line.Foreground = new SolidColorBrush(Colors.AliceBlue);
-                       line.TextWrapping = TextWrapping.Wrap;
+                       line.Background = new SolidColorBrush(Colors.Gray);                      
+
+//                       line.TextWrapping = TextWrapping.Wrap;
                        line.TextAlignment = TextAlignment.Center;
+                       line.HorizontalAlignment = HorizontalAlignment.Left;
+                       line.Margin = new Thickness(105, 20, 0, 0);
                        line.Name = "lbl_folder_name";
-                       ((Panel)FindName("panel_details")).Children.Add(line);
-                       Debug.WriteLine("inserted the new line -> " + line.Text);
+
+    */
+
+                       ((Panel)FindName("panel_details")).Children.Add(brd);
+                       //Debug.WriteLine("inserted the new line -> " + line.Text);
                    });
                }
                return;
