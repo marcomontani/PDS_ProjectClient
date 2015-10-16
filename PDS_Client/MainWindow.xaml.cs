@@ -357,12 +357,6 @@ namespace PDS_Client
 
         }
 
-
-        private void onDeleted(object source, FileSystemEventArgs e)
-        {
-            MessageBox.Show("You deleted a file ");
-        }
-
         private void OnChanged(object source, FileSystemEventArgs e)
         {
             // Specify what is done when a file is changed, created, or deleted.
@@ -382,6 +376,7 @@ namespace PDS_Client
                     queueObject obj = eventsArray.Dequeue();
                     if(obj.type == WatcherChangeTypes.Changed || obj.type == WatcherChangeTypes.Created) sendFileToServer(obj.file);
                     if (obj.type == WatcherChangeTypes.Deleted) fileDeleted(obj.file);
+                    Dispatcher.Invoke(updateFolders);
                 }
                 Monitor.Exit(events_semaphore);
             });
@@ -399,8 +394,7 @@ namespace PDS_Client
                 s.Receive(buffer);
                 if (Encoding.ASCII.GetString(buffer).Contains("ERR"))
                     MessageBox.Show("Errore: errore nel comunicare al server che il file " + path + "e' stato cancellato", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
-            });
-            Dispatcher.Invoke(updateFolders);
+            }); 
         }
 
         private void mouse_MouseDown(object sender, MouseButtonEventArgs e)
@@ -525,6 +519,74 @@ namespace PDS_Client
             e.Handled = true;
         }
 
+        private void MouseTrashHandler(object sender, RoutedEventArgs e)
+        {
+            NetworkHandler.getInstance().addFunction((Socket socket) =>
+            {
+                socket.Send(BitConverter.GetBytes(7));
+                byte[] dim = new byte[4];
+                int ricevuti = socket.Receive(dim);
+                int dimension = BitConverter.ToInt32(dim, 0);
+                byte[] buffer = new byte[dimension];
+                ricevuti = socket.Receive(buffer);
+
+                string s = Encoding.ASCII.GetString(buffer);
+                List<JSONDeletedFile> items = JsonConvert.DeserializeObject<List<JSONDeletedFile>>(s);
+                Dispatcher.Invoke(() => {
+                    ((StackPanel)this.FindName("fs_grid")).Children.Clear();
+                
+
+                int i = 0;
+                StackPanel hpanel = null;
+                foreach (JSONDeletedFile file in items)
+                {
+                    if ((i % rowElements) == 0)
+                    {
+                        hpanel = new StackPanel();
+                        hpanel.VerticalAlignment = VerticalAlignment.Center;
+                        hpanel.Orientation = Orientation.Horizontal;
+                        hpanel.Margin = new Thickness(5, 5, 0, 0);
+                    };
+
+                    i++;
+                    StackPanel panel = new StackPanel();
+                    panel.Width = 100;
+                    panel.Height = 85;
+                    panel.Name = "file_panel";
+                    panel.VerticalAlignment = VerticalAlignment.Center;
+                    panel.HorizontalAlignment = HorizontalAlignment.Center;
+                    panel.Orientation = Orientation.Vertical;
+                    //panel.MouseLeftButtonDown += MouseFileButtonDownHandler;
+
+
+                    System.Windows.Controls.Image img_file = new System.Windows.Controls.Image();
+                    img_file.Source = new BitmapImage(new Uri(@"\images\fileIcon.png", UriKind.RelativeOrAbsolute));
+
+                    img_file.Width = 50;
+                    img_file.Height = 50;
+                    panel.Children.Add(img_file);
+
+
+                    TextBlock lbl_file_name = new TextBlock();
+
+                    lbl_file_name.MaxWidth = 85;
+                    lbl_file_name.MinWidth = 40;
+                    lbl_file_name.TextWrapping = TextWrapping.Wrap;
+                    lbl_file_name.TextAlignment = TextAlignment.Center;
+
+                    lbl_file_name.Name = "lbl_folder_name";
+                    lbl_file_name.Text = file.name.Split('\\')[file.name.Split('\\').Length - 1];
+                    panel.Children.Add(lbl_file_name);
+
+
+                    hpanel.Children.Add(panel);
+                    if (((i - 1) % rowElements) == 0) ((StackPanel)this.FindName("fs_grid")).Children.Add(hpanel);
+                }
+                });
+
+
+            });
+        }
        
 
         private void addCurrentFoderInfo(string path)
@@ -533,8 +595,12 @@ namespace PDS_Client
             g.Children.Clear();
             StackPanel hpanel=null;
             int i = rowElements;
-            
-            foreach (string dir in Directory.GetDirectories(path))
+
+            // code to add the thrash folder
+
+            List<string> lista = new List<string>(Directory.GetDirectories(path));
+            if(path.Equals(root)) lista.Add("\\Cestino");
+            foreach (string dir in lista)
             {
                 if ((i % rowElements) == 0) {
                     hpanel = new StackPanel();
@@ -552,16 +618,21 @@ namespace PDS_Client
                 panel.VerticalAlignment = VerticalAlignment.Center;
                 panel.HorizontalAlignment = HorizontalAlignment.Center;
                 panel.Orientation = Orientation.Vertical;
-                panel.MouseLeftButtonDown += MouseFolderButtonDownHandler;
-               
+                if (!dir.Equals("\\Cestino"))
+                    panel.MouseLeftButtonDown += MouseFolderButtonDownHandler;
+                else
+                    panel.MouseLeftButtonDown += MouseTrashHandler;
+
 
                 System.Windows.Controls.Image img_folder = new System.Windows.Controls.Image();
-                img_folder.Source = new BitmapImage(new Uri(@"\images\folderIcon.png", UriKind.RelativeOrAbsolute));
+                if(!dir.Equals("\\Cestino"))
+                    img_folder.Source = new BitmapImage(new Uri(@"\images\folderIcon.png", UriKind.RelativeOrAbsolute));
+                else
+                    img_folder.Source = new BitmapImage(new Uri(@"\images\trash.png", UriKind.RelativeOrAbsolute));
 
                 img_folder.Width = 50;
                 img_folder.Height = 50;
                 panel.Children.Add(img_folder);
-
 
                 TextBlock lbl_dir_name = new TextBlock();
 
