@@ -181,13 +181,13 @@ namespace PDS_Client
             NetworkHandler.getInstance().addFunction(syncFolder);
         }
 
-        private void syncFolder()
+        private void syncFolder(Socket socket)
         {
             Debug.WriteLine("THREAD STARTED");
-            s.Send(BitConverter.GetBytes(8));  // == ENUM.getUserFiles
+            socket.Send(BitConverter.GetBytes(8));  // == ENUM.getUserFiles
             byte[] buffer = new byte[4096];
             
-            int received = s.Receive(buffer, 4096, SocketFlags.None);
+            int received = socket.Receive(buffer, 4096, SocketFlags.None);
             string serverFolderDescription = Encoding.ASCII.GetString(buffer);
             serverFolderDescription = serverFolderDescription.Remove(received);
             // now in the string we have the JSON string description. it is "folder: [{"path":"...", "name":"......"}]"
@@ -229,12 +229,12 @@ namespace PDS_Client
 
         private void sendFileToServer(string path)
         {
-            NetworkHandler.getInstance().addFunction ( () => {
-                s.Send(BitConverter.GetBytes(2)); // UPLOAD FILE
-                s.Send(Encoding.ASCII.GetBytes(path));
+            NetworkHandler.getInstance().addFunction ( (Socket socket) => {
+                socket.Send(BitConverter.GetBytes(2)); // UPLOAD FILE
+                socket.Send(Encoding.ASCII.GetBytes(path));
 
                 byte[] inBuff = new byte[1024];
-                s.Receive(inBuff);
+                socket.Receive(inBuff);
                 if (!Encoding.ASCII.GetString(inBuff).Contains("OK")) throw new Exception("error: filename sent but error was returned");
 
 
@@ -242,17 +242,17 @@ namespace PDS_Client
                 if (dimension > Int32.MaxValue) throw new Exception("error: file dimension too big! > 32 bit");
                 int dim = (int)dimension;
 
-                s.Send(BitConverter.GetBytes(dim));
+                socket.Send(BitConverter.GetBytes(dim));
 
-                s.Send(File.ReadAllBytes(path));
+                socket.Send(File.ReadAllBytes(path));
 
-                s.Receive(inBuff);
+                socket.Receive(inBuff);
                 if (!Encoding.ASCII.GetString(inBuff).Contains("OK")) throw new Exception("error: file not uploaded correctly");
 
                 // todo: calculate and send sha1 checksum
                 SHA1 shaProvider = SHA1.Create();
                 shaProvider.ComputeHash(new FileStream(path, FileMode.Open));
-                s.Send(shaProvider.Hash);
+                socket.Send(shaProvider.Hash);
             });
         }
 
@@ -426,14 +426,14 @@ namespace PDS_Client
             string filename = (string)((TextBlock)((StackPanel)sender).Children[1]).Text;
             this.selectedFile = currentDirectory + "\\" + filename;
 
-            NetworkHandler.getInstance().addFunction( () =>
+            NetworkHandler.getInstance().addFunction( (Socket socket) =>
            {
                Debug.WriteLine("Into downloader (versions) thread");
-               s.Send(BitConverter.GetBytes(5)); // GET FILE VERSIONS
+               socket.Send(BitConverter.GetBytes(5)); // GET FILE VERSIONS
 
                string pathToSend = currentDirectory + "\\" + filename;
-               s.Send(BitConverter.GetBytes(pathToSend.Length));
-               s.Send(Encoding.ASCII.GetBytes(pathToSend));
+               socket.Send(BitConverter.GetBytes(pathToSend.Length));
+               socket.Send(Encoding.ASCII.GetBytes(pathToSend));
                Debug.WriteLine("sent " + pathToSend);
 
 
@@ -454,7 +454,7 @@ namespace PDS_Client
 
 
                byte[] buff = new byte[BitConverter.ToInt32(dim, 0)+1];
-               s.Receive(buff); // receive json
+               socket.Receive(buff); // receive json
 
                string versions = Encoding.ASCII.GetString(buff);
 
