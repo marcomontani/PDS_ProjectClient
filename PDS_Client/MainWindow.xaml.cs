@@ -190,7 +190,7 @@ namespace PDS_Client
             int received = s.Receive(buffer, 4096, SocketFlags.None);
             string serverFolderDescription = Encoding.ASCII.GetString(buffer);
             serverFolderDescription = serverFolderDescription.Remove(received);
-            // now in the string we have the JSON string description. it is "folder: [{"path":"...", "name":"......"}]"
+            // now in the string we have the JSON string description. it is "[{"path":"...", "name":"......"}]"
 
             Debug.WriteLine("JSON rappresentation of the folder status on the server: \n" + serverFolderDescription + "\n");
             
@@ -234,7 +234,7 @@ namespace PDS_Client
                 s.Send(Encoding.ASCII.GetBytes(path));
 
                 byte[] inBuff = new byte[1024];
-                s.Receive(inBuff);
+                s.Receive(inBuff);  
                 if (!Encoding.ASCII.GetString(inBuff).Contains("OK")) throw new Exception("error: filename sent but error was returned");
 
 
@@ -253,6 +253,8 @@ namespace PDS_Client
                 SHA1 shaProvider = SHA1.Create();
                 shaProvider.ComputeHash(new FileStream(path, FileMode.Open));
                 s.Send(shaProvider.Hash);
+                s.Receive(inBuff);
+                if (!Encoding.ASCII.GetString(inBuff).Contains("OK")) MessageBox.Show("sha non accettato");
             });
         }
 
