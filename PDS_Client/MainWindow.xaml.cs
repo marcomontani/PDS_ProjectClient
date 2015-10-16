@@ -348,10 +348,19 @@ namespace PDS_Client
             FileSystemWatcher fs = new FileSystemWatcher(currentDirectory);
             
             fs.Changed += new FileSystemEventHandler(OnChanged);
+            fs.Created += new FileSystemEventHandler(OnChanged);
+            fs.Deleted += new FileSystemEventHandler(OnChanged);
+
             fs.IncludeSubdirectories = true;
-            fs.NotifyFilter = NotifyFilters.LastWrite;
+            //fs.NotifyFilter = NotifyFilters.LastWrite;
             fs.EnableRaisingEvents = true;
 
+        }
+
+
+        private void onDeleted(object source, FileSystemEventArgs e)
+        {
+            MessageBox.Show("You deleted a file ");
         }
 
         private void OnChanged(object source, FileSystemEventArgs e)
@@ -364,7 +373,6 @@ namespace PDS_Client
             if (!eventsArray.Contains(q)) eventsArray.Enqueue(q);
             Monitor.Exit(events_semaphore);
 
-
             Thread t = new Thread(() =>
             {
                 Thread.Sleep(5); // to avoid duplicated changes (known bug of the filesystewatcher)
@@ -373,11 +381,26 @@ namespace PDS_Client
                 {
                     queueObject obj = eventsArray.Dequeue();
                     if(obj.type == WatcherChangeTypes.Changed || obj.type == WatcherChangeTypes.Created) sendFileToServer(obj.file);
+                    if (obj.type == WatcherChangeTypes.Deleted) fileDeleted(obj.file);
                 }
                 Monitor.Exit(events_semaphore);
             });
             t.Start();
             
+        }
+
+        public void fileDeleted(string path)
+        {
+            NetworkHandler.getInstance().addFunction((Socket socket) =>
+            {
+                byte[] buffer = new byte[5];
+                socket.Send(BitConverter.GetBytes(4));
+                socket.Send(Encoding.ASCII.GetBytes(path));
+                s.Receive(buffer);
+                if (Encoding.ASCII.GetString(buffer).Contains("ERR"))
+                    MessageBox.Show("Errore: errore nel comunicare al server che il file " + path + "e' stato cancellato", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+            });
+            Dispatcher.Invoke(updateFolders);
         }
 
         private void mouse_MouseDown(object sender, MouseButtonEventArgs e)
@@ -507,6 +530,7 @@ namespace PDS_Client
         private void addCurrentFoderInfo(string path)
         {
             StackPanel g = (StackPanel)this.FindName("fs_grid");
+            g.Children.Clear();
             StackPanel hpanel=null;
             int i = rowElements;
             
