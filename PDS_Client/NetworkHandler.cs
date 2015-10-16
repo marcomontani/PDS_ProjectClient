@@ -19,7 +19,7 @@ namespace PDS_Client
         Thread[] threads;
         Socket s;
         static NetworkHandler This = null;
-        Queue<Action> functions;
+        Queue<Action<Socket>> functions;
         Mutex fsemaphore, d_semaphore;
         volatile Boolean die;
 
@@ -32,7 +32,7 @@ namespace PDS_Client
             d_semaphore = new Mutex();
             s = cs;
             threads = new Thread[1];
-            functions = new Queue<Action>();
+            functions = new Queue<Action<Socket>>();
             for (int i = 0; i < 1; i++)
             {
                 threads[i] = new Thread(() => {
@@ -62,9 +62,9 @@ namespace PDS_Client
                             }
 
                         }
-                        Action f = functions.Dequeue();
+                        Action<Socket> f = functions.Dequeue();
                         Monitor.Exit(fsemaphore);
-                        f();
+                        f(s);
 
                         Monitor.Enter(d_semaphore);
                         value = die;
@@ -93,7 +93,7 @@ namespace PDS_Client
             This = null;
         }
 
-        public void addFunction(Action f)
+        public void addFunction(Action<Socket> f)
         {
             Monitor.Enter(fsemaphore);
             functions.Enqueue(f);

@@ -23,7 +23,7 @@ namespace PDS_Client
     /// Logica di interazione per MainWindow.xaml
     /// </summary>
     /// 
-    
+
     
 
     struct queueObject
@@ -184,13 +184,13 @@ namespace PDS_Client
             NetworkHandler.getInstance().addFunction(syncFolder);
         }
 
-        private void syncFolder()
+        private void syncFolder(Socket socket)
         {
             Debug.WriteLine("THREAD STARTED");
-            s.Send(BitConverter.GetBytes(8));  // == ENUM.getUserFiles
+            socket.Send(BitConverter.GetBytes(8));  // == ENUM.getUserFiles
             byte[] buffer = new byte[4096];
             
-            int received = s.Receive(buffer, 4096, SocketFlags.None);
+            int received = socket.Receive(buffer, 4096, SocketFlags.None);
             string serverFolderDescription = Encoding.ASCII.GetString(buffer);
             serverFolderDescription = serverFolderDescription.Remove(received);
             // now in the string we have the JSON string description. it is "[{"path":"...", "name":"......"}]"
@@ -232,12 +232,12 @@ namespace PDS_Client
 
         private void sendFileToServer(string path)
         {
-            NetworkHandler.getInstance().addFunction ( () => {
-                s.Send(BitConverter.GetBytes(2)); // UPLOAD FILE
-                s.Send(Encoding.ASCII.GetBytes(path));
+            NetworkHandler.getInstance().addFunction ( (Socket socket) => {
+                socket.Send(BitConverter.GetBytes(2)); // UPLOAD FILE
+                socket.Send(Encoding.ASCII.GetBytes(path));
 
                 byte[] inBuff = new byte[1024];
-                s.Receive(inBuff);  
+                socket.Receive(inBuff);
                 if (!Encoding.ASCII.GetString(inBuff).Contains("OK")) throw new Exception("error: filename sent but error was returned");
 
 
@@ -245,11 +245,11 @@ namespace PDS_Client
                 if (dimension > Int32.MaxValue) throw new Exception("error: file dimension too big! > 32 bit");
                 int dim = (int)dimension;
 
-                s.Send(BitConverter.GetBytes(dim));
+                socket.Send(BitConverter.GetBytes(dim));
 
-                s.Send(File.ReadAllBytes(path));
+                socket.Send(File.ReadAllBytes(path));
 
-                s.Receive(inBuff);
+                socket.Receive(inBuff);
                 if (!Encoding.ASCII.GetString(inBuff).Contains("OK")) throw new Exception("error: file not uploaded correctly");
 
                 // todo: calculate and send sha1 checksum
@@ -351,8 +351,11 @@ namespace PDS_Client
             FileSystemWatcher fs = new FileSystemWatcher(currentDirectory);
             
             fs.Changed += new FileSystemEventHandler(OnChanged);
+            fs.Created += new FileSystemEventHandler(OnChanged);
+            fs.Deleted += new FileSystemEventHandler(OnChanged);
+
             fs.IncludeSubdirectories = true;
-            fs.NotifyFilter = NotifyFilters.LastWrite;
+            //fs.NotifyFilter = NotifyFilters.LastWrite;
             fs.EnableRaisingEvents = true;
 
         }
@@ -367,7 +370,6 @@ namespace PDS_Client
             if (!eventsArray.Contains(q)) eventsArray.Enqueue(q);
             Monitor.Exit(events_semaphore);
 
-
             Thread t = new Thread(() =>
             {
                 Thread.Sleep(5); // to avoid duplicated changes (known bug of the filesystewatcher)
@@ -376,11 +378,26 @@ namespace PDS_Client
                 {
                     queueObject obj = eventsArray.Dequeue();
                     if(obj.type == WatcherChangeTypes.Changed || obj.type == WatcherChangeTypes.Created) sendFileToServer(obj.file);
+                    if (obj.type == WatcherChangeTypes.Deleted) fileDeleted(obj.file);
+                    Dispatcher.Invoke(updateFolders);
                 }
                 Monitor.Exit(events_semaphore);
             });
             t.Start();
             
+        }
+
+        public void fileDeleted(string path)
+        {
+            NetworkHandler.getInstance().addFunction((Socket socket) =>
+            {
+                byte[] buffer = new byte[5];
+                socket.Send(BitConverter.GetBytes(4));
+                socket.Send(Encoding.ASCII.GetBytes(path));
+                s.Receive(buffer);
+                if (Encoding.ASCII.GetString(buffer).Contains("ERR"))
+                    MessageBox.Show("Errore: errore nel comunicare al server che il file " + path + "e' stato cancellato", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+            }); 
         }
 
         private void mouse_MouseDown(object sender, MouseButtonEventArgs e)
@@ -431,14 +448,15 @@ namespace PDS_Client
             string filename = (string)((TextBlock)((StackPanel)sender).Children[1]).Text;
             this.selectedFile = currentDirectory + "\\" + filename;
 
-            NetworkHandler.getInstance().addFunction( () =>
+            NetworkHandler.getInstance().addFunction( (Socket socket) =>
            {
 
                Debug.WriteLine("Into downloader (versions) thread");
-               s.Send(BitConverter.GetBytes(5)); // GET FILE VERSIONS
+               socket.Send(BitConverter.GetBytes(5)); // GET FILE VERSIONS
+
                string pathToSend = currentDirectory + "\\" + filename;
-               s.Send(BitConverter.GetBytes(pathToSend.Length));
-               s.Send(Encoding.ASCII.GetBytes(pathToSend));
+               socket.Send(BitConverter.GetBytes(pathToSend.Length));
+               socket.Send(Encoding.ASCII.GetBytes(pathToSend));
                Debug.WriteLine("sent " + pathToSend);
 
 
@@ -459,7 +477,7 @@ namespace PDS_Client
 
 
                byte[] buff = new byte[BitConverter.ToInt32(dim, 0)+1];
-               s.Receive(buff); // receive json
+               socket.Receive(buff); // receive json
 
                string versions = Encoding.ASCII.GetString(buff);
 
@@ -616,15 +634,88 @@ namespace PDS_Client
             e.Handled = true;
         }
 
+        private void MouseTrashHandler(object sender, RoutedEventArgs e)
+        {
+            NetworkHandler.getInstance().addFunction((Socket socket) =>
+            {
+                socket.Send(BitConverter.GetBytes(7));
+                byte[] dim = new byte[4];
+                int ricevuti = socket.Receive(dim);
+                int dimension = BitConverter.ToInt32(dim, 0);
+                byte[] buffer = new byte[dimension];
+                ricevuti = socket.Receive(buffer);
+
+                string s = Encoding.ASCII.GetString(buffer);
+                List<JSONDeletedFile> items = JsonConvert.DeserializeObject<List<JSONDeletedFile>>(s);
+                Dispatcher.Invoke(() => {
+                    ((StackPanel)this.FindName("fs_grid")).Children.Clear();
+       
+
+                int i = 0;
+                StackPanel hpanel = null;
+                foreach (JSONDeletedFile file in items)
+                {
+                    if ((i % rowElements) == 0)
+                    {
+                        hpanel = new StackPanel();
+                        hpanel.VerticalAlignment = VerticalAlignment.Center;
+                        hpanel.Orientation = Orientation.Horizontal;
+                        hpanel.Margin = new Thickness(5, 5, 0, 0);
+                    };
+
+                    i++;
+                    StackPanel panel = new StackPanel();
+                    panel.Width = 100;
+                    panel.Height = 85;
+                    panel.Name = "file_panel";
+                    panel.VerticalAlignment = VerticalAlignment.Center;
+                    panel.HorizontalAlignment = HorizontalAlignment.Center;
+                    panel.Orientation = Orientation.Vertical;
+                    //panel.MouseLeftButtonDown += MouseFileButtonDownHandler;
+
+
+                    System.Windows.Controls.Image img_file = new System.Windows.Controls.Image();
+                    img_file.Source = new BitmapImage(new Uri(@"\images\fileIcon.png", UriKind.RelativeOrAbsolute));
+
+                    img_file.Width = 50;
+                    img_file.Height = 50;
+                    panel.Children.Add(img_file);
+
+
+                    TextBlock lbl_file_name = new TextBlock();
+
+                    lbl_file_name.MaxWidth = 85;
+                    lbl_file_name.MinWidth = 40;
+                    lbl_file_name.TextWrapping = TextWrapping.Wrap;
+                    lbl_file_name.TextAlignment = TextAlignment.Center;
+
+                    lbl_file_name.Name = "lbl_folder_name";
+                    lbl_file_name.Text = file.name.Split('\\')[file.name.Split('\\').Length - 1];
+                    panel.Children.Add(lbl_file_name);
+
+
+                    hpanel.Children.Add(panel);
+                    if (((i - 1) % rowElements) == 0) ((StackPanel)this.FindName("fs_grid")).Children.Add(hpanel);
+                }
+                });
+
+
+            });
+        }
        
 
         private void addCurrentFoderInfo(string path)
         {
             StackPanel g = (StackPanel)this.FindName("fs_grid");
+            g.Children.Clear();
             StackPanel hpanel=null;
             int i = rowElements;
             
-            foreach (string dir in Directory.GetDirectories(path))
+            // code to add the thrash folder
+
+            List<string> lista = new List<string>(Directory.GetDirectories(path));
+            if(path.Equals(root)) lista.Add("\\Cestino");
+            foreach (string dir in lista)
             {
                 if ((i % rowElements) == 0) {
                     hpanel = new StackPanel();
@@ -642,16 +733,21 @@ namespace PDS_Client
                 panel.VerticalAlignment = VerticalAlignment.Center;
                 panel.HorizontalAlignment = HorizontalAlignment.Center;
                 panel.Orientation = Orientation.Vertical;
+                if (!dir.Equals("\\Cestino"))
                 panel.MouseLeftButtonDown += MouseFolderButtonDownHandler;
+                else
+                    panel.MouseLeftButtonDown += MouseTrashHandler;
                
 
                 System.Windows.Controls.Image img_folder = new System.Windows.Controls.Image();
+                if(!dir.Equals("\\Cestino"))
                 img_folder.Source = new BitmapImage(new Uri(@"\images\folderIcon.png", UriKind.RelativeOrAbsolute));
+                else
+                    img_folder.Source = new BitmapImage(new Uri(@"\images\trash.png", UriKind.RelativeOrAbsolute));
 
                 img_folder.Width = 50;
                 img_folder.Height = 50;
                 panel.Children.Add(img_folder);
-
 
                 TextBlock lbl_dir_name = new TextBlock();
 
