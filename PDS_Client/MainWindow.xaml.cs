@@ -190,7 +190,7 @@ namespace PDS_Client
             int received = socket.Receive(buffer, 4096, SocketFlags.None);
             string serverFolderDescription = Encoding.ASCII.GetString(buffer);
             serverFolderDescription = serverFolderDescription.Remove(received);
-            // now in the string we have the JSON string description. it is "folder: [{"path":"...", "name":"......"}]"
+            // now in the string we have the JSON string description. it is "[{"path":"...", "name":"......"}]"
 
             Debug.WriteLine("JSON rappresentation of the folder status on the server: \n" + serverFolderDescription + "\n");
             
@@ -252,7 +252,9 @@ namespace PDS_Client
                 // todo: calculate and send sha1 checksum
                 SHA1 shaProvider = SHA1.Create();
                 shaProvider.ComputeHash(new FileStream(path, FileMode.Open));
-                socket.Send(shaProvider.Hash);
+                s.Send(shaProvider.Hash);
+                s.Receive(inBuff);
+                if (!Encoding.ASCII.GetString(inBuff).Contains("OK")) MessageBox.Show("sha non accettato");
             });
         }
 
