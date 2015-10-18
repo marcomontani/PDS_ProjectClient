@@ -281,11 +281,11 @@ namespace PDS_Client
                         break;
                     }
 
+
+                    NetworkHandler.createInstance(username, password);
                     MainWindow mw = new MainWindow();
-                    mw.setSocket(socket);
                     mw.setCurrentDirectory(path);
                     mw.Show();
-                    //mw.updateFolders();
                     mw.sync();
                     this.Close();
 

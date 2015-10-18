@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using System.Threading;
 using System.Net.Sockets;
 using System.Diagnostics;
+using System.Net;
+using System.Windows;
 
 namespace PDS_Client
 {
@@ -17,7 +19,6 @@ namespace PDS_Client
     class NetworkHandler
     {
         Thread[] threads;
-        Socket s;
         static NetworkHandler This = null;
         Queue<Action<Socket>> functions;
         Mutex fsemaphore, d_semaphore;
@@ -25,12 +26,11 @@ namespace PDS_Client
 
 
 
-        private NetworkHandler(Socket cs)
+        private NetworkHandler(string username, string password)
         {
             die = false;
             fsemaphore = new Mutex();
             d_semaphore = new Mutex();
-            s = cs;
             threads = new Thread[1];
             functions = new Queue<Action<Socket>>();
             for (int i = 0; i < 1; i++)
@@ -41,6 +41,22 @@ namespace PDS_Client
                     Monitor.Exit(d_semaphore);
 
 
+                    // connect to the server
+                    Socket s;
+                    try
+                    {
+                        s = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                        s.Connect(IPAddress.Parse("127.0.0.1"), 7000);
+
+                    }
+                    catch (SocketException se)
+                    {
+                        MessageBox.Show("Errore Nella connessione al server: codice" + se.ErrorCode, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                        // this should never happen because i just checked in the login the fact that it's all ok
+                    }
+                    logIn(s, username, password);
+
                     while (!value)
                     {
                         Monitor.Enter(fsemaphore);
@@ -48,13 +64,10 @@ namespace PDS_Client
                         {
                             Monitor.Wait(fsemaphore);
                             // i am awake. do i still need to live?
-                            Debug.Write("This thread has been awaken");
+                            Debug.Write("This thread has been awaken ");
                             Monitor.Enter(d_semaphore);
                             value = die;
                             Monitor.Exit(d_semaphore);
-
-
-
                             if (value)
                             {
                                 Debug.WriteLine("and has to die");
@@ -64,7 +77,14 @@ namespace PDS_Client
                         }
                         Action<Socket> f = functions.Dequeue();
                         Monitor.Exit(fsemaphore);
-                        f(s);
+                        try {
+                            f(s);
+                        }
+                        catch(SocketException se)
+                        {
+                            // this means an error on the network.
+                            return; // i make the thread die
+                        }
 
                         Monitor.Enter(d_semaphore);
                         value = die;
@@ -78,9 +98,9 @@ namespace PDS_Client
         }
 
 
-        public static void createInstance(Socket cs)
+        public static void createInstance(string username, string password)
         {
-            if (This == null)  This = new NetworkHandler(cs);
+            if (This == null)  This = new NetworkHandler(username, password);
         }
 
         // Implementation of NetworkHandler as singleton object
@@ -114,6 +134,60 @@ namespace PDS_Client
             Debug.WriteLine("should awake them now");
             Monitor.Exit(fsemaphore);
 
+        }
+
+        private bool logIn(Socket s, string username, string password)
+        {
+            int inviati = s.Send(BitConverter.GetBytes(0)); // LOG IN
+
+            string message = username;
+            s.Send(Encoding.ASCII.GetBytes(message), message.Length, SocketFlags.None);
+
+            byte[] buffer = new byte[5];
+            s.Receive(buffer);
+            message = Encoding.ASCII.GetString(buffer);
+            if (message.Contains("ERR"))
+            {
+                MessageBox.Show("Errore nell'username", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
+            message = password;
+
+            s.Send(Encoding.ASCII.GetBytes(message), message.Length, SocketFlags.None);
+
+            s.Receive(buffer);
+            message = Encoding.ASCII.GetString(buffer);
+            if (message.Contains("ERR"))
+            {
+                MessageBox.Show("Impossibile completare il login", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
+            // if i am here i am logged!
+            return true;
+
+
+            /*
+            message = path;
+            socket.Send(Encoding.ASCII.GetBytes(message), message.Length, SocketFlags.None);
+            buffer = new byte[10];
+            int r = socket.Receive(buffer);
+            message = Encoding.ASCII.GetString(buffer);
+            if (message.Contains("ERR"))
+            {
+                MessageBox.Show("Errore nel path", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                break;
+            }
+
+            r = socket.Receive(buffer);
+            message = Encoding.ASCII.GetString(buffer);
+            if (message.Contains("ERR"))
+            {
+                MessageBox.Show("Errore:impossibile creare il nuovo utente", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                
+            }
+            */
         }
 
 

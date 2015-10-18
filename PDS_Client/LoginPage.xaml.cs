@@ -111,7 +111,10 @@ namespace PDS_Client
 
 
                 MainWindow main = new MainWindow();
-                main.setSocket(s);
+
+
+                s.Close();
+                NetworkHandler.createInstance(username, password);
                 main.setCurrentDirectory(path);
                 main.updateFolders();
                 main.Show();
