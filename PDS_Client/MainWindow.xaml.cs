@@ -284,7 +284,6 @@ namespace PDS_Client
                 lbl_file_name.Text = file.name;
                 panel.Children.Add(lbl_file_name);
 
-                // todo: add here a hidden textbox with complete path!
                 TextBlock hddn_path = new TextBlock();
                 hddn_path.Visibility = Visibility.Collapsed;
                 hddn_path.Name = "hidden_path";
