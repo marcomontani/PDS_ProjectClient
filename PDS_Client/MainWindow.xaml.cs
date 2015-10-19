@@ -835,7 +835,7 @@ namespace PDS_Client
             Monitor.Exit(saveFlag);
             ((UIElement)this.FindName("details_container")).Visibility = Visibility.Visible;
             // i start here a thread in order to download the versions of this file
-            ((StackPanel)this.FindName("panel_details")).Children.Clear();
+           // ((StackPanel)this.FindName("panel_details")).Children.Clear();
             string filename = (string)((TextBlock)((StackPanel)sender).Children[1]).Text;
             this.selectedFile = currentDirectory + "\\" + filename;
 
@@ -910,6 +910,33 @@ namespace PDS_Client
         private void MouseTrashHandler(object sender, RoutedEventArgs e)
         {
             currentDirectory = "trash";
+
+
+            StackPanel sp = ((StackPanel)FindName("address"));
+            Label rt = new Label();
+            rt.Background = System.Windows.Media.Brushes.DarkRed;
+            rt.Foreground = System.Windows.Media.Brushes.AliceBlue;
+            rt.BorderThickness = new Thickness(2, 2, 2, 2);
+            rt.BorderBrush = System.Windows.Media.Brushes.LightGray;
+            rt.Content = "Cestino";
+            rt.VerticalContentAlignment = VerticalAlignment.Center;
+            rt.HorizontalAlignment = HorizontalAlignment.Left;
+            rt.MouseEnter += (s, er) =>
+            {
+                ((Label)s).Background = System.Windows.Media.Brushes.Red;
+                ((Label)s).BorderBrush = System.Windows.Media.Brushes.White;
+            };
+            rt.MouseLeave += (s, er) =>
+            {
+                ((Label)s).Background = System.Windows.Media.Brushes.DarkRed;
+
+            };
+
+
+            sp.Children.Add(rt);
+
+
+
             NetworkHandler.getInstance().addFunction((Socket socket) =>
             {
                 socket.Send(BitConverter.GetBytes(7));
@@ -969,6 +996,23 @@ namespace PDS_Client
             setFlag(true);
         }
 
-        
+        private void TS_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+          
+            ScrollViewer scrollviewer = sender as ScrollViewer;
+            if (e.Delta > 0)
+            {
+                scrollviewer.LineLeft();
+            }
+            else
+            {
+                scrollviewer.LineRight();
+            }
+            e.Handled = true;
+        }
+
+
     }
+
+    
 }
