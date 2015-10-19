@@ -55,12 +55,14 @@ namespace PDS_Client
         string[] months = { "GEN", "FEB","MAR","APR","MAG","GIU","LUG","AGO","SET","OTT","NOV","DIC"};
 
         string selectedFile;
+        FileSystemWatcher fs;
 
 
 
         public MainWindow()
         {
             InitializeComponent();
+            fs = null;
             ((UIElement)this.FindName("details_container")).Visibility = Visibility.Collapsed;
             currentDirectory = "C:";
             events_semaphore = new Mutex();
@@ -548,7 +550,8 @@ namespace PDS_Client
             NetworkHandler.getInstance().addFunction((Socket s) => {
                 // selecting operation
                 s.Send(BitConverter.GetBytes(6));
-
+                string tmp_path = "C:\\Temp\\polihub.tmp"; // what if that file is already there?
+                
                 Debug.WriteLine("voglio scaricare la versione del {0} di {1}", version, path);
                 // sending path
                 s.Send(BitConverter.GetBytes(path.Length));
@@ -596,7 +599,7 @@ namespace PDS_Client
                     return;
                 }
 
-                FileStream stream = new FileStream(path+".tmp", FileMode.Create);
+                FileStream stream = new FileStream(tmp_path, FileMode.Create);
                 while (fDim > 0)
                 {
                     ricevuti = s.Receive(buffer);
@@ -611,53 +614,49 @@ namespace PDS_Client
                 Debug.WriteLine("aspetto l'hash del server");
                 ricevuti = s.Receive(buffer); // this is server hash
                 SHA1 shaProvider = SHA1.Create();
-                shaProvider.ComputeHash(new FileStream(path+".tmp", FileMode.Open));
-                Debug.WriteLine("Calcolo hash su " + path + ".tmp");
-                byte[] chash = shaProvider.Hash;
 
-                bool equal = true;
 
-                Debug.WriteLine("Calcolo se gli hash sono uguali");
-                for (int i = 0; i < chash.Length; i++)
-                {
-                    if ((byte)buffer[i] != chash[i])
-                    {
-                        equal = false;
-                        break;
-                    }
-                }
+                FileStream tmpStr = new FileStream(tmp_path, FileMode.Open);
+                byte[] chash = shaProvider.ComputeHash(tmpStr);
+                tmpStr.Close();
 
-                if (equal)
-                {
-                    s.Send(Encoding.ASCII.GetBytes("OK"));
-                    Debug.WriteLine("Gli hash sono uguali grazie al cielo");
-                }
-                else
-                {
-                    s.Send(Encoding.ASCII.GetBytes("ERR"));
-                    MessageBox.Show("Gli hash sono diversi", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-                
-
-                ricevuti = s.Receive(buffer);
+                Debug.WriteLine("Calcolo se gli hash sono uguali. |chash| = {0}, |shash| = {1}", chash.Length, ricevuti);
                 buffer[ricevuti] = 0;
-                if (Encoding.ASCII.GetString(buffer).Contains("OK"))
+                string str_chash = BitConverter.ToString(chash).Replace("-", "");
+                string str_shash = Encoding.ASCII.GetString(buffer, 0, 40).ToUpper();
+
+                Debug.WriteLine("{0}\n{1}", str_shash, str_chash);
+
+
+
+                if (!str_chash.Equals(str_shash))
                 {
-                    Debug.WriteLine("File.Delete({0});", path);
-                    File.Delete(path);
-                    Debug.WriteLine("File.Move({0}, {1});", path+".tmp", path);
-                    File.Move(path + ".tmp", path);
+
+                    MessageBox.Show("Gli hash sono diversi", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                    File.Delete(tmp_path);
                     return;
                 }
                 else
+                    s.Send(Encoding.ASCII.GetBytes("OK"));
+
+
+                s.Receive(buffer);
+                if (!Encoding.ASCII.GetString(buffer).Contains("OK"))
                 {
-                    MessageBox.Show("Errore, impossibile tornare alla versione del file del " + version, "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
-                    File.Delete(path + ".tmp");
+                    MessageBox.Show("Impossibile aggiungere una nuova versione lato server", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 
+
+
+                fs.EnableRaisingEvents = false;
+                Debug.WriteLine("File.Delete( " + path + " );");
+                File.Delete(path);
+                Debug.WriteLine("File.Move({0}, {1});", path+".tmp", path);
+                File.Move(tmp_path, path);
+                fs.EnableRaisingEvents = true;
                 
+                return; 
             });
         }
 
@@ -667,7 +666,7 @@ namespace PDS_Client
 
         private void watchFolder()
         {
-            FileSystemWatcher fs = new FileSystemWatcher(currentDirectory);
+            fs = new FileSystemWatcher(currentDirectory);
             
             fs.Changed += new FileSystemEventHandler(OnChanged);
             fs.Created += new FileSystemEventHandler(OnChanged);
