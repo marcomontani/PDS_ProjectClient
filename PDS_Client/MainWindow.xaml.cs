@@ -53,7 +53,7 @@ namespace PDS_Client
         bool first = true;
         bool flag = true;
         string[] months = { "GEN", "FEB","MAR","APR","MAG","GIU","LUG","AGO","SET","OTT","NOV","DIC"};
-
+        Mutex saveFlag;
         string selectedFile;
         FileSystemWatcher fs;
 
@@ -63,6 +63,7 @@ namespace PDS_Client
         {
             InitializeComponent();
             fs = null;
+            saveFlag = new Mutex();
             ((UIElement)this.FindName("details_container")).Visibility = Visibility.Collapsed;
             currentDirectory = "C:";
             events_semaphore = new Mutex();
@@ -259,10 +260,8 @@ namespace PDS_Client
                 panel.VerticalAlignment = VerticalAlignment.Center;
                 panel.HorizontalAlignment = HorizontalAlignment.Center;
                 panel.Orientation = Orientation.Vertical;
-                if (trash)
-                    panel.MouseLeftButtonDown += MouseFileThrashHandler;
-                else
-                    panel.MouseLeftButtonDown += MouseFileButtonDownHandler;
+                panel.MouseLeftButtonDown += MouseFileButtonDownHandler;
+
 
 
                 System.Windows.Controls.Image img_file = new System.Windows.Controls.Image();
@@ -395,6 +394,7 @@ namespace PDS_Client
 
         private void addCurrentFoderInfo(string path)
         {
+ 
             Debug.WriteLine("into addCurrentFoderInfo");
             StackPanel g = (StackPanel)this.FindName("fs_grid");
             g.Children.Clear();
@@ -771,13 +771,29 @@ namespace PDS_Client
             
         }
 
+        private void setFlag(bool f)
+        {
+            
+            Monitor.Enter(saveFlag);
+            flag = f;
+            Monitor.Exit(saveFlag);
+
+        }
+        
         private void MouseFileButtonDownHandler(object sender, RoutedEventArgs e) {
 
+            
             Debug.WriteLine("MouseFileButtonDownHandler called");
 
             //  Grid.SetColumnSpan((UIElement)this.FindName("fs_grid"), 1);
-            if (flag == false) return;
-
+            
+            Monitor.Enter(saveFlag);
+            if (flag == false)
+            {
+                Monitor.Exit(saveFlag);
+                return;
+            }
+            Monitor.Exit(saveFlag);
             ((UIElement)this.FindName("details_container")).Visibility = Visibility.Visible;
             // i start here a thread in order to download the versions of this file
             ((StackPanel)this.FindName("panel_details")).Children.Clear();
@@ -841,10 +857,11 @@ namespace PDS_Client
             //rowElements = 7;
             ((StackPanel)this.FindName("fs_grid")).Children.Clear();
             addCurrentFoderInfo(currentDirectory);
-            flag = false;
+           
+            setFlag(false);
             sb.Completed += (object s, EventArgs ev) =>
             {
-                flag = true;
+                setFlag(true);
             };
             sb.Begin();
 
@@ -853,6 +870,7 @@ namespace PDS_Client
 
         private void MouseTrashHandler(object sender, RoutedEventArgs e)
         {
+            currentDirectory = "trash";
             NetworkHandler.getInstance().addFunction((Socket socket) =>
             {
                 socket.Send(BitConverter.GetBytes(7));
@@ -877,7 +895,14 @@ namespace PDS_Client
 
         private void MouseFileThrashHandler(object sender, RoutedEventArgs e)
         {
-            if (flag == false) return;
+
+            Monitor.Enter(saveFlag);
+            if (flag == false)
+            {
+                Monitor.Exit(saveFlag);
+                return;
+            }
+            Monitor.Exit(saveFlag);
             Debug.WriteLine("into MouseFileThrashHandler");
 
             ((UIElement)this.FindName("details_container")).Visibility = Visibility.Visible;
@@ -968,10 +993,10 @@ namespace PDS_Client
                     //rowElements = 7;
                     ((StackPanel)this.FindName("fs_grid")).Children.Clear();
                     insertFilesFromJSON(deletedFiles, true);
-                    flag = false;
+                    setFlag(false);
                     sb.Completed += (object so, EventArgs ev) =>
                     {
-                        flag = true;
+                        setFlag(true);
                     };
                     //sb.Begin();
                     // todo: gae pls mettilo a posto! sto schifo chiama addCurrentFoderInfo
@@ -985,13 +1010,19 @@ namespace PDS_Client
 
         private void closeVersions(object sender, MouseButtonEventArgs e)
         {
-            if (flag == false) return;
+            Monitor.Enter(saveFlag);
+            if (flag == false)
+            {
+                Monitor.Exit(saveFlag);
+                return;
+            }
+            Monitor.Exit(saveFlag);
             selectedFile = null;
             int span = Grid.GetColumnSpan((UIElement)this.FindName("fs_grid"));
             if (span == 7 && flag) return;
             Storyboard sb = (Storyboard)((Grid)this.FindName("fs_container")).FindResource("key_details_animation_close");
             sb.Completed += closeSidebar;
-            flag = false;
+            setFlag(false);
             sb.Begin();
         }
 
@@ -1002,7 +1033,7 @@ namespace PDS_Client
             // rowElements = 10;
             ((StackPanel)this.FindName("fs_grid")).Children.Clear();
             addCurrentFoderInfo(currentDirectory);
-            flag = true;
+            setFlag(true);
         }
 
         
