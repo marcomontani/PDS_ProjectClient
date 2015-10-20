@@ -693,7 +693,32 @@ namespace PDS_Client
                 Debug.WriteLine("File.Move({0}, {1});", path+".tmp", path);
                 File.Move(tmp_path, path);
                 fs.EnableRaisingEvents = true;
-                
+
+                if(version == null)
+                {
+                    // here i need to refresh the interface!
+                    if (currentDirectory.Equals("trash"))
+                    {
+                        s.Send(BitConverter.GetBytes((int)messages.GET_DELETED_FILES));
+                        byte[] dim = new byte[4];
+                        ricevuti = s.Receive(dim);
+                        int dimension = BitConverter.ToInt32(dim, 0);
+                        buffer = new byte[dimension];
+                        ricevuti = s.Receive(buffer);
+
+                        string delFiles = Encoding.ASCII.GetString(buffer);
+                        List<JSONDeletedFile> items = JsonConvert.DeserializeObject<List<JSONDeletedFile>>(delFiles);
+
+                        Dispatcher.Invoke(() =>
+                        {
+                            insertFilesFromJSON(items, true);
+                        });
+                    }
+                    else
+                        updateFolders();
+
+                }
+
                 return; 
             });
         }
@@ -939,7 +964,7 @@ namespace PDS_Client
 
             NetworkHandler.getInstance().addFunction((Socket socket) =>
             {
-                socket.Send(BitConverter.GetBytes(7));
+                socket.Send(BitConverter.GetBytes((int)messages.GET_DELETED_FILES));
                 byte[] dim = new byte[4];
                 int ricevuti = socket.Receive(dim);
                 int dimension = BitConverter.ToInt32(dim, 0);
@@ -948,8 +973,6 @@ namespace PDS_Client
 
                 string s = Encoding.ASCII.GetString(buffer);
                 List<JSONDeletedFile> items = JsonConvert.DeserializeObject<List<JSONDeletedFile>>(s);
-
-                Debug.WriteLine("deletedFiles: \n " + s);
 
                 Dispatcher.Invoke(() => {
                     insertFilesFromJSON(items, true);
@@ -961,8 +984,7 @@ namespace PDS_Client
 
         private void MouseFileThrashHandler(object sender, RoutedEventArgs e)
         {
-            string path =
-            ((TextBlock)((Panel)sender).Children[2]).Text + "\\" + ((TextBlock)((Panel)sender).Children[1]).Text;
+            string path = ((TextBlock)((Panel)sender).Children[2]).Text + "\\" + ((TextBlock)((Panel)sender).Children[1]).Text;
             MessageBoxResult res =  MessageBox.Show("Vuoi davvero ripristinare il file " + path + "?", "Ripristino", MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (res == MessageBoxResult.No) return;
             downloadFile(path, null);
