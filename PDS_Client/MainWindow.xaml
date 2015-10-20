@@ -153,11 +153,13 @@
             
 
         </Grid.ColumnDefinitions>
-
-        <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="7" x:Name="fs_grid"  MouseLeftButtonDown="closeVersions"  Margin="0,45,0,0" >
+        <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="7" x:Name="background" MouseLeftButtonDown="closeVersions"  >
             <StackPanel.Background>
-                <ImageBrush ImageSource="images/pixelart.png" Stretch="Uniform"  AlignmentY="Bottom" />
+                <ImageBrush ImageSource="images/pixelart.png" Stretch="Uniform"  AlignmentY="Bottom" AlignmentX="Right" />
             </StackPanel.Background>
+        </StackPanel>
+        <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="7" x:Name="fs_grid"  MouseLeftButtonDown="closeVersions"  Margin="0,45,0,0" >
+        
         </StackPanel>
 
         <Rectangle x:Name="rect_header" Grid.Row="0" Grid.Column="0" Fill="#111221" Margin="0,0,0,1" Grid.ColumnSpan="7" MouseDown="mouse_MouseDown"/>

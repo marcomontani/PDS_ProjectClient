@@ -23,9 +23,22 @@ namespace PDS_Client
     /// Logica di interazione per MainWindow.xaml
     /// </summary>
     /// 
+    enum messages
+    {
+        LOGIN = 0,
+        SIGNIN = 1,
+        UPLOAD_FILE = 2,
+        REMOVE_FILE = 3,
+        DELETE_FILE = 4,
+        GET_FILE_VERSIONS = 5,
+        DOWNLOAD_PREVIOUS_VERSION = 6,
+        GET_DELETED_FILES = 7,
+        GET_USER_FOLDER = 8,
+        GET_USER_PATH = 9,
+        DOWNLOAD_LAST_VERSION = 10  
+    }
 
     
-
     struct queueObject
     {
         public string file;
@@ -260,7 +273,8 @@ namespace PDS_Client
                 panel.VerticalAlignment = VerticalAlignment.Center;
                 panel.HorizontalAlignment = HorizontalAlignment.Center;
                 panel.Orientation = Orientation.Vertical;
-                panel.MouseLeftButtonDown += MouseFileButtonDownHandler;
+                if (!trash) panel.MouseLeftButtonDown += MouseFileButtonDownHandler;
+                else panel.MouseLeftButtonDown += MouseFileThrashHandler;
 
 
 
@@ -283,7 +297,6 @@ namespace PDS_Client
                 lbl_file_name.Text = file.name;
                 panel.Children.Add(lbl_file_name);
 
-                // todo: add here a hidden textbox with complete path!
                 TextBlock hddn_path = new TextBlock();
                 hddn_path.Visibility = Visibility.Collapsed;
                 hddn_path.Name = "hidden_path";
@@ -436,8 +449,8 @@ namespace PDS_Client
                 panel.Height = 84;
                 panel.Name = "folder_panel";
                 panel.VerticalAlignment = VerticalAlignment.Center;
-                panel.HorizontalAlignment = HorizontalAlignment.Center;                
-                panel.Orientation = Orientation.Vertical;               
+                panel.HorizontalAlignment = HorizontalAlignment.Center;
+                panel.Orientation = Orientation.Vertical;
                 panel.MouseEnter += (s, e) =>
                 {
                     panel.Background = System.Windows.Media.Brushes.LightBlue;
@@ -555,10 +568,7 @@ namespace PDS_Client
         {
             throw new NotImplementedException();
         }
-
-
-
-
+        
         /*
             UPLOAD AND DOWNLOAD OF FILES
         */
@@ -566,7 +576,7 @@ namespace PDS_Client
         private void sendFileToServer(string path)
         {
             NetworkHandler.getInstance().addFunction ( (Socket socket) => {
-                socket.Send(BitConverter.GetBytes(2)); // UPLOAD FILE
+                socket.Send(BitConverter.GetBytes((int)messages.UPLOAD_FILE)); // UPLOAD FILE
                 socket.Send(Encoding.ASCII.GetBytes(path));
 
                 byte[] inBuff = new byte[1024];
@@ -598,16 +608,36 @@ namespace PDS_Client
         {
             NetworkHandler.getInstance().addFunction((Socket s) => {
                 // selecting operation
-                s.Send(BitConverter.GetBytes(6));
-                string tmp_path = "C:\\Temp\\polihub.tmp"; // what if that file is already there?
+                int ricevuti;
+                byte[] buffer = new byte[1024];
+                if (version == null)
+                {
+                    // downloading the last version
+                    s.Send(BitConverter.GetBytes((int)messages.DOWNLOAD_LAST_VERSION));
+                    s.Send(BitConverter.GetBytes(path.Length));
+                    s.Send(Encoding.ASCII.GetBytes(path));
+                    // check if it's ok
                 
+                    ricevuti = s.Receive(buffer);
+                    buffer[ricevuti] = (byte)'\0';
+                    string msg = Encoding.ASCII.GetString(buffer);
+                    if (ricevuti != 2 || !msg.Contains("OK")) // there was an error
+                    {
+                        MessageBox.Show("Errore: Impossibile mandare il nome del file correttamente", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+                }
+                else
+                {
+                    // downloading a specific old version
+                    s.Send(BitConverter.GetBytes((int)messages.DOWNLOAD_PREVIOUS_VERSION));
                 Debug.WriteLine("voglio scaricare la versione del {0} di {1}", version, path);
                 // sending path
                 s.Send(BitConverter.GetBytes(path.Length));
                 s.Send(Encoding.ASCII.GetBytes(path));
                 // check if it's ok
-                byte[] buffer = new byte[1024];
-                int ricevuti = s.Receive(buffer);
+                    
+                    ricevuti = s.Receive(buffer);
                 buffer[ricevuti] = (byte)'\0';
                 string msg = Encoding.ASCII.GetString(buffer);
                 if (ricevuti != 2 || !msg.Contains("OK")) // there was an error
@@ -628,6 +658,13 @@ namespace PDS_Client
                     MessageBox.Show("Errore: Impossibile mandare la versione del file correttamente", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
+                }
+
+
+                
+                string tmp_path = "C:\\Temp\\polihub.tmp"; // what if that file is already there?
+                
+                
 
                 // now i need to read the dimension of the file
                 ricevuti = s.Receive(buffer);
@@ -682,6 +719,7 @@ namespace PDS_Client
                 {
 
                     MessageBox.Show("Gli hash sono diversi", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                    s.Send(Encoding.ASCII.GetBytes("ERR"));
                     File.Delete(tmp_path);
                     return;
                 }
@@ -700,7 +738,7 @@ namespace PDS_Client
 
                 fs.EnableRaisingEvents = false;
                 Debug.WriteLine("File.Delete( " + path + " );");
-                File.Delete(path);
+                if(version != null) File.Delete(path);
                 Debug.WriteLine("File.Move({0}, {1});", path+".tmp", path);
                 File.Move(tmp_path, path);
                 fs.EnableRaisingEvents = true;
@@ -722,7 +760,7 @@ namespace PDS_Client
             fs.Deleted += new FileSystemEventHandler(OnChanged);
 
             fs.IncludeSubdirectories = true;
-            //fs.NotifyFilter = NotifyFilters.LastWrite;
+            fs.NotifyFilter = NotifyFilters.FileName;
             fs.EnableRaisingEvents = true;
 
         }
@@ -740,6 +778,14 @@ namespace PDS_Client
             watchFolder();
         }
 
+        private void setFlag(bool f)
+        {
+
+            Monitor.Enter(saveFlag);
+            flag = f;
+            Monitor.Exit(saveFlag);
+
+        }
 
 
         /*
@@ -821,15 +867,6 @@ namespace PDS_Client
             
         }
 
-        private void setFlag(bool f)
-        {
-            
-            Monitor.Enter(saveFlag);
-            flag = f;
-            Monitor.Exit(saveFlag);
-
-        }
-        
         private void MouseFileButtonDownHandler(object sender, RoutedEventArgs e) {
 
             
@@ -972,117 +1009,11 @@ namespace PDS_Client
 
         private void MouseFileThrashHandler(object sender, RoutedEventArgs e)
         {
-
-            Monitor.Enter(saveFlag);
-            if (flag == false)
-            {
-                Monitor.Exit(saveFlag);
-                return;
-            }
-            Monitor.Exit(saveFlag);
-            Debug.WriteLine("into MouseFileThrashHandler");
-
-            ((UIElement)this.FindName("details_container")).Visibility = Visibility.Visible;
-            // i start here a thread in order to download the versions of this file
-            ((StackPanel)this.FindName("panel_details")).Children.Clear();
-            string filenamepath = (string)((TextBlock)((StackPanel)sender).Children[2]).Text + "\\" +(string)((TextBlock)((StackPanel)sender).Children[1]).Text; // this is hidden_path!
-
-            Debug.WriteLine("filenamepath : " + filenamepath);
-
-            NetworkHandler.getInstance().addFunction((Socket socket) =>
-            {
-
-                Debug.WriteLine("Into downloader (versions) thread");
-
-                socket.Send(BitConverter.GetBytes(5)); // GET FILE VERSIONS
-
-                string pathToSend = filenamepath;
-
-                socket.Send(BitConverter.GetBytes(pathToSend.Length));
-                socket.Send(Encoding.ASCII.GetBytes(pathToSend));
-                Debug.WriteLine("sent " + pathToSend);
-
-
-                byte[] dim = new byte[4]; // just the space for an int
-                if (socket.Receive(dim) != 4)
-                {
-                    Debug.WriteLine("did not receive a valid number");
-                    return;
-                }
-                if (BitConverter.ToInt32(dim, 0) <= 0)
-                {
-                    // an error server side has occurred!
-                    Debug.WriteLine("dim of versions < 0");
-                    return;
-                }
-                else
-                    Debug.WriteLine("dim = " + BitConverter.ToInt32(dim, 0));
-
-
-                byte[] buff = new byte[BitConverter.ToInt32(dim, 0) + 1];
-                socket.Receive(buff); // receive json
-
-                string versions = Encoding.ASCII.GetString(buff);
-
-                Debug.WriteLine(versions);
-
-                List<JSONVersion> items = JsonConvert.DeserializeObject<List<JSONVersion>>(versions);
-                BrushConverter bc = new BrushConverter();
-                foreach (JSONVersion v in items)
-                {
-                    Debug.WriteLine("v.date = " + v.date);
-                    Dispatcher.Invoke(() =>
-                    {
-                        
-                        ((Panel)FindName("panel_details")).Children.Add(getCalendar(v.date, bc, filenamepath));
-                    });
-                }
-                return;
-            }
-            );
-
-
-            NetworkHandler.getInstance().addFunction((Socket socket) =>
-            {
-                // downloading the list of deleted files. it will be necessary in order to make the lateral bar appear
-                socket.Send(BitConverter.GetBytes(7));
-                byte[] dim = new byte[4];
-                int ricevuti = socket.Receive(dim);
-
-                Debug.WriteLine("downloading the list of deleted files to update while opening the side bar");
-
-                int dimension = BitConverter.ToInt32(dim, 0);
-                Debug.WriteLine("the json has length of " + dimension + "bytes");
-
-
-                byte[] buffer = new byte[dimension];
-                ricevuti = socket.Receive(buffer);
-                string s = Encoding.ASCII.GetString(buffer);
-
-                Debug.WriteLine(s);
-
-                List<JSONDeletedFile> deletedFiles = JsonConvert.DeserializeObject<List<JSONDeletedFile>>(s);
-
-
-                Dispatcher.Invoke(() =>
-                {
-                    Storyboard sb = (Storyboard)((Grid)this.FindName("fs_container")).FindResource("key_details_animation");
-                    //rowElements = 7;
-                    ((StackPanel)this.FindName("fs_grid")).Children.Clear();
-                    insertFilesFromJSON(deletedFiles, true);
-                    setFlag(false);
-                    sb.Completed += (object so, EventArgs ev) =>
-                    {
-                        setFlag(true);
-                    };
-                    //sb.Begin();
-                    // todo: gae pls mettilo a posto! sto schifo chiama addCurrentFoderInfo
-
-                    e.Handled = true;
-                    return;
-                });
-                return;
-            });
+            string path =
+            ((TextBlock)((Panel)sender).Children[2]).Text + "\\" + ((TextBlock)((Panel)sender).Children[1]).Text;
+            MessageBoxResult res =  MessageBox.Show("Vuoi davvero ripristinare il file " + path + "?", "Ripristino", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (res == MessageBoxResult.No) return;
+            downloadFile(path, null);
         }
 
         private void closeVersions(object sender, MouseButtonEventArgs e)
