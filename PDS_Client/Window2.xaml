@@ -15,7 +15,7 @@
         <TextBlock Foreground="AliceBlue" x:Name="textBlock" HorizontalAlignment="Left" Margin="30,16,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="352" Height="53" Grid.ColumnSpan="2"><Run Text="Il "/><Run Text="seguente file "/><Run Text="è stato cancellato dalla sua posizione"/><Run Text=" originaria"/><Run Text=". Clicca "/><Run Text="Ripristina"/><Run Text=" per salvare sul tuo computer l'ultima versione o scegli Cancella per rimuoverlo in modo definitivo."/><Run Text=" "/><Run Text=" "/></TextBlock>
         <Button x:Name="button" HorizontalAlignment="Left" Background="#4B4C5D" Margin="0,114,0,0" VerticalAlignment="Top" Width="100" Grid.ColumnSpan="1" Grid.Column="1">
             <StackPanel Orientation="Horizontal">
-                <Image Width="27" Source="images/confirmation.png"></Image>
+                <Image Width="27" Source="images/confirm.png"></Image>
                 <TextBlock Foreground="AliceBlue" Text="Ripristina" Margin="7,5,0,0" />
             </StackPanel>
         </Button>

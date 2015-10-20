@@ -378,8 +378,8 @@ namespace PDS_Client
             //  <Image Source="images/download.png"  Margin="45,10,0,0" Width="30"/>
             System.Windows.Controls.Image dwn = new System.Windows.Controls.Image();
             dwn.Source = new BitmapImage(new Uri(@"\images\download.png", UriKind.RelativeOrAbsolute));
-            dwn.Width = 30;
-            dwn.Margin = new Thickness(45, 10, 0, 0);
+            dwn.Width = 50;
+            dwn.Margin = new Thickness(45, 5, 0, 0);
 
             calendar.Children.Add(year);
             calendar.Children.Add(day);
@@ -398,7 +398,13 @@ namespace PDS_Client
  
             Debug.WriteLine("into addCurrentFoderInfo");
             StackPanel g = (StackPanel)this.FindName("fs_grid");
+            // <Image Source="/images/pixelart.png" x:Name="image1" Height="997" Margin="782,0,0,0"/>
+            System.Windows.Controls.Image pixel = new System.Windows.Controls.Image();           
+            pixel.Source = new BitmapImage(new Uri(@"\images\pixelart.png", UriKind.RelativeOrAbsolute));
+            pixel.Height = 977;
+            pixel.Margin = new Thickness(782, 0, 0, 0);
             g.Children.Clear();
+            
             StackPanel hpanel = null;
             int i = rowElements;
 
@@ -418,13 +424,31 @@ namespace PDS_Client
                 };
 
                 i++;
+                BrushConverter bc = new BrushConverter();
+                Border brpanel = new Border();
+                brpanel.Background = System.Windows.Media.Brushes.Transparent;
+                brpanel.BorderThickness = new Thickness(1);
+                brpanel.BorderBrush = System.Windows.Media.Brushes.Transparent;
+                brpanel.Height = 85;
+
                 StackPanel panel = new StackPanel();
                 panel.Width = 100;
-                panel.Height = 85;
+                panel.Height = 84;
                 panel.Name = "folder_panel";
                 panel.VerticalAlignment = VerticalAlignment.Center;
-                panel.HorizontalAlignment = HorizontalAlignment.Center;
-                panel.Orientation = Orientation.Vertical;
+                panel.HorizontalAlignment = HorizontalAlignment.Center;                
+                panel.Orientation = Orientation.Vertical;               
+                panel.MouseEnter += (s, e) =>
+                {
+                    panel.Background = System.Windows.Media.Brushes.LightBlue;
+                    brpanel.BorderBrush = System.Windows.Media.Brushes.DeepSkyBlue;
+                };
+                panel.MouseLeave += (s, e) =>
+                {
+                    panel.Background = System.Windows.Media.Brushes.Transparent;
+                    brpanel.BorderBrush = System.Windows.Media.Brushes.Transparent;
+                };
+
                 if (!dir.Equals("\\Cestino"))
                     panel.MouseLeftButtonDown += MouseFolderButtonDownHandler;
                 else
@@ -439,6 +463,7 @@ namespace PDS_Client
 
                 img_folder.Width = 50;
                 img_folder.Height = 50;
+                img_folder.Margin = new Thickness(0, 4, 0, 0);
                 panel.Children.Add(img_folder);
 
                 TextBlock lbl_dir_name = new TextBlock();
@@ -452,8 +477,8 @@ namespace PDS_Client
                 lbl_dir_name.Text = dir.Split('\\')[dir.Split('\\').Length - 1];
                 panel.Children.Add(lbl_dir_name);
 
-
-                hpanel.Children.Add(panel);
+                brpanel.Child = panel;
+                hpanel.Children.Add(brpanel);
                 if (((i - 1) % rowElements) == 0) g.Children.Add(hpanel);
             }
 
@@ -471,6 +496,13 @@ namespace PDS_Client
                 };
 
                 i++;
+                BrushConverter bc = new BrushConverter();
+                Border brpanel = new Border();
+                brpanel.Background = System.Windows.Media.Brushes.Transparent;
+                brpanel.BorderThickness = new Thickness(1);
+                brpanel.BorderBrush = System.Windows.Media.Brushes.Transparent;
+                brpanel.Height = 85;
+                
                 StackPanel panel = new StackPanel();
                 panel.Width = 100;
                 panel.Height = 85;
@@ -480,6 +512,16 @@ namespace PDS_Client
                 panel.Orientation = Orientation.Vertical;
                 panel.MouseLeftButtonDown += MouseFileButtonDownHandler;
 
+                panel.MouseEnter += (s, e) =>
+                {
+                    panel.Background = System.Windows.Media.Brushes.LightBlue;
+                    brpanel.BorderBrush = System.Windows.Media.Brushes.DeepSkyBlue;
+                };
+                panel.MouseLeave += (s, e) =>
+                {
+                    panel.Background = System.Windows.Media.Brushes.Transparent;
+                    brpanel.BorderBrush = System.Windows.Media.Brushes.Transparent;
+                };
 
                 System.Windows.Controls.Image img_file = new System.Windows.Controls.Image();
                 img_file.Source = new BitmapImage(new Uri(@"\images\fileIcon.png", UriKind.RelativeOrAbsolute));
@@ -501,13 +543,20 @@ namespace PDS_Client
                 panel.Children.Add(lbl_file_name);
 
 
-                hpanel.Children.Add(panel);
+                brpanel.Child = panel;
+                hpanel.Children.Add(brpanel);
+
                 if (((i - 1) % rowElements) == 0) g.Children.Add(hpanel);
             }
 
         }
-        
-        
+
+        private void Panel_MouseEnter(object sender, MouseEventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+
 
 
         /*
