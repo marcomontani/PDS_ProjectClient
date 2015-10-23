@@ -132,9 +132,7 @@ namespace PDS_Client
             {
                 Debug.WriteLine("{0}{1}", it.path, it.name);
                 downloadFile(it.path +"\\"+ it.name, null);
-            }
-            // todo:upload each of them
-           
+            }           
 
         }
 
@@ -283,7 +281,7 @@ namespace PDS_Client
 
         }
 
-        private void insertFilesFromJSON(List<JSONDeletedFile> items, Boolean trash)
+        private void insertFilesFromJSON(List<JSONDeletedFile> items, bool trash)
         {
             ((StackPanel)this.FindName("fs_grid")).Children.Clear();
 
@@ -774,16 +772,7 @@ namespace PDS_Client
                     // here i need to refresh the interface!
                     if (currentDirectory.Equals("trash"))
                     {
-                        s.Send(BitConverter.GetBytes((int)messages.GET_DELETED_FILES));
-                        byte[] dim = new byte[4];
-                        ricevuti = s.Receive(dim);
-                        int dimension = BitConverter.ToInt32(dim, 0);
-                        buffer = new byte[dimension];
-                        ricevuti = s.Receive(buffer);
-
-                        string delFiles = Encoding.ASCII.GetString(buffer);
-                        List<JSONDeletedFile> items = JsonConvert.DeserializeObject<List<JSONDeletedFile>>(delFiles);
-
+                        List<JSONDeletedFile> items = getDeletedFiles(s);
                         Dispatcher.Invoke(() =>
                         {
                             insertFilesFromJSON(items, true);
@@ -803,6 +792,20 @@ namespace PDS_Client
         */
 
 
+        private List<JSONDeletedFile> getDeletedFiles(Socket s)
+        {
+            s.Send(BitConverter.GetBytes((int)messages.GET_DELETED_FILES));
+            byte[] dim = new byte[4];
+            int ricevuti = s.Receive(dim);
+            int dimension = BitConverter.ToInt32(dim, 0);
+            byte[] buffer = new byte[dimension];
+            ricevuti = s.Receive(buffer);
+
+            string delFiles = Encoding.ASCII.GetString(buffer);
+            List<JSONDeletedFile> items = JsonConvert.DeserializeObject<List<JSONDeletedFile>>(delFiles);
+            return items;
+        }
+
         private byte[] getSha1(string file)
         {
             SHA1 shaProvider = SHA1.Create();
@@ -811,6 +814,7 @@ namespace PDS_Client
             hashStr.Close();
             return shaProvider.Hash;
         }
+
         private void watchFolder()
         {
             fs = new FileSystemWatcher(currentDirectory);
@@ -847,6 +851,27 @@ namespace PDS_Client
 
         }
 
+        private void removeFilePermanently(string filepath)
+        {
+            NetworkHandler.getInstance().addFunction((Socket s) =>
+            {
+                s.Send(BitConverter.GetBytes((int)messages.REMOVE_FILE));
+                s.Send(Encoding.UTF8.GetBytes(filepath));
+                byte[]buf = new byte[3];
+                s.Receive(buf);
+                if (Encoding.ASCII.GetString(buf).Contains("ERR"))
+                    MessageBox.Show("Impossibile cancellare il file " + filepath, "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                else
+                {
+                    List<JSONDeletedFile> items = getDeletedFiles(s);
+                    Dispatcher.Invoke(()=>
+                    {
+                        insertFilesFromJSON(items, true);
+                    });
+                }
+                
+            });
+        }
 
         /*
             EVENT HANDLERS
@@ -1071,6 +1096,10 @@ namespace PDS_Client
             MessageBoxResult res =  MessageBox.Show("Vuoi davvero ripristinare il file " + path + "?", "Ripristino", MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (res == MessageBoxResult.No) return;
             downloadFile(path, null);
+            if (false)
+            {
+                removeFilePermanently(path);
+            }
         }
 
         private void closeVersions(object sender, MouseButtonEventArgs e)

@@ -1,21 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-
 using System.Net.Sockets;
 using System.Net;
-using System.Runtime.InteropServices;
 using System.Diagnostics;
+using System.Security.Cryptography;
+using System.IO;
+
 
 namespace PDS_Client
 {
@@ -30,6 +23,34 @@ namespace PDS_Client
         public Window1()
         {
             InitializeComponent();
+            byte[] chifer = File.ReadAllBytes("./polihub.settings");
+            string plain = Encoding.ASCII.GetString(ProtectedData.Unprotect(chifer, null, DataProtectionScope.CurrentUser));
+            Debug.WriteLine(plain);
+            string[] credentials = plain.Split('\n');
+            if(credentials.Length == 3)
+            {
+                try
+                {
+                    createSocket();
+                    if (doLogin(credentials[0], credentials[1])) { 
+                    s.Close();
+
+
+
+                    MainWindow main = new MainWindow();
+                    NetworkHandler.createInstance(credentials[0], credentials[1]);
+                    main.setCurrentDirectory(credentials[2]);
+                    main.updateFolders();
+                    main.Show();
+                    main.sync();
+                    this.Close();
+                }
+                }
+                catch (SocketException)
+                {
+                    s = null;
+                }
+            }
         }
 
 
@@ -68,60 +89,54 @@ namespace PDS_Client
             string username = ((TextBox)this.FindName("text_user")).Text;
             string password = ((PasswordBox)this.FindName("text_pass")).Password;
 
-            s.Send(BitConverter.GetBytes(0), SocketFlags.None); // LOGIN
+            if (!doLogin(username, password))
+                return;
+
+
             
-            s.Send(Encoding.ASCII.GetBytes(username));
+
             byte[] buffer = new byte[255];
-            s.Receive(buffer);
-            if (Encoding.ASCII.GetString(buffer).Contains("ERR"))
+            
+            string path = null;
+            s.Send(BitConverter.GetBytes((int)messages.GET_USER_PATH));
+            int r = s.Receive(buffer);
+
+            Debug.WriteLine("ricevuti: " + r);
+
+            // if error -1 is returned
+            if (r == 4)
             {
-                MessageBox.Show("Errore: username non ricevuto correttamente", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                if (BitConverter.ToInt32(buffer, 0) == -1)
+                {
+                    MessageBox.Show("Errore: non posso ottenere il path", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                    return;
+                }
+            }
+            if(r <= 0)
+            {
+                MessageBox.Show("Errore: non posso ottenere il path", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
+            path = Encoding.ASCII.GetString(buffer);
 
-            s.Send(Encoding.ASCII.GetBytes(password));
-
-
-            s.Receive(buffer);
-            string message = Encoding.ASCII.GetString(buffer);
-            if (message.Contains("OK")) { 
-                
-
-                string path = null;
-                s.Send(BitConverter.GetBytes(9));
-                int r = s.Receive(buffer);
-
-                Debug.WriteLine("ricevuti: " + r);
-
-                if (r == 4) {
-                    if(BitConverter.ToInt32(buffer, 0) == -1) {
-                        MessageBox.Show("Errore: non posso ottenere il path", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-
-                        return;
-                    }
-                }
-                path = Encoding.ASCII.GetString(buffer);
-
-                Debug.Print("before delete: " + path + "\n");
-                
-
-                path = path.Remove(r);
-
-                Debug.Print("after delete: " + path);
+            Debug.Print("before delete: " + path + "\n");
 
 
-                MainWindow main = new MainWindow();
+            path = path.Remove(r);
+            
+            Debug.Print("after delete: " + path);
+            s.Close();
 
 
-                s.Close();
-                NetworkHandler.createInstance(username, password);
-                main.setCurrentDirectory(path);
-                main.updateFolders();
-                main.Show();
-                main.sync();
-                this.Close();
-            }
-            else MessageBox.Show("Errore: credenziali errate", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+
+            MainWindow main = new MainWindow();
+            NetworkHandler.createInstance(username, password);
+            main.setCurrentDirectory(path);
+            main.updateFolders();
+            main.Show();
+            main.sync();
+            this.Close();
 
         }
 
@@ -140,6 +155,31 @@ namespace PDS_Client
             Registration reg = new Registration();
             reg.Show();
             this.Close();
+        }
+
+        private bool doLogin(string username, string password)
+        {
+            s.Send(BitConverter.GetBytes((int)messages.LOGIN), SocketFlags.None); // LOGIN
+
+            s.Send(Encoding.ASCII.GetBytes(username));
+            byte[] buffer = new byte[255];
+            s.Receive(buffer);
+            if (Encoding.ASCII.GetString(buffer).Contains("ERR"))
+            {
+                MessageBox.Show("Errore: username non ricevuto correttamente", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+            s.Send(Encoding.ASCII.GetBytes(password));
+            s.Receive(buffer);
+            string message = Encoding.ASCII.GetString(buffer);
+            if (message.Contains("OK"))
+                return true;
+            else
+            {
+                MessageBox.Show("Errore: credenziali errate", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
         }
     }
 }

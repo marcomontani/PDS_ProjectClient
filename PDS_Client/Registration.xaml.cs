@@ -2,15 +2,15 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-
+using System.Security.Cryptography;
 using System.Net.Sockets;
 using System.Net;
 using System.Windows.Shapes;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using System.Diagnostics;
 using System;
 using System.Text;
+using System.IO;
 
 namespace PDS_Client
 {
@@ -281,7 +281,11 @@ namespace PDS_Client
                         break;
                     }
 
-
+                    string stats = username + "\n" + password + "\n" + path;                   
+                    byte[] protectedData = ProtectedData.Protect(Encoding.ASCII.GetBytes(stats), null, DataProtectionScope.CurrentUser);
+                    FileStream str = File.OpenWrite("./polihub.settings");
+                    str.Write(protectedData, 0, protectedData.Length);
+                    str.Close();
                     NetworkHandler.createInstance(username, password);
                     MainWindow mw = new MainWindow();
                     mw.setCurrentDirectory(path);

@@ -46,7 +46,7 @@ namespace PDS_Client
                     try
                     {
                         s = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                        s.Connect(IPAddress.Parse("127.0.0.1"), 7000);
+                        s.Connect("127.0.0.1", 7000);
 
                     }
                     catch (SocketException se)
