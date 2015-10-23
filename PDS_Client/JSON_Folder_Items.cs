@@ -21,6 +21,12 @@ namespace PDS_Client
             get; set;
         }
 
+        [JsonProperty("checksum")]
+        public string checksum
+        {
+            get; set;
+        }
+
         public static bool operator ==(JSON_Folder_Items a, JSON_Folder_Items b)
         {
             if(a.name == b.name && a.path == b.path) return true;
@@ -34,7 +40,7 @@ namespace PDS_Client
         public override bool Equals(Object obj)
         {
             if (obj == null) return false;
-            if (obj.GetType().Name != "JSON_Folder_Items") return false;
+            if (obj.GetType() != this.GetType()) return false;
             return ((JSON_Folder_Items)obj) == this;
         }
     }

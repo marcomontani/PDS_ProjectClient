@@ -125,8 +125,16 @@ namespace PDS_Client
             
             List<JSON_Folder_Items> items = JsonConvert.DeserializeObject<List<JSON_Folder_Items>>(serverFolderDescription);
             
-            // todo: add date of last update and compare it with date of last modify
             checkFileExists(currentDirectory, items);
+
+            Debug.WriteLine("The server has {0} files more then me. i need to download them", items.Count);
+            foreach (JSON_Folder_Items it in items)
+            {
+                Debug.WriteLine("{0}{1}", it.path, it.name);
+                downloadFile(it.path +"\\"+ it.name, null);
+            }
+            // todo:upload each of them
+           
 
         }
 
@@ -139,7 +147,7 @@ namespace PDS_Client
                 string[] splitPath = file.Split('\\');
                 item.name = splitPath[splitPath.Length-1];
                 item.path = basePath;
-
+                item.checksum = BitConverter.ToString(getSha1(file)).Replace("-", "").ToLower();
                 if (!items.Contains(item))
                 {
                     try
@@ -150,6 +158,33 @@ namespace PDS_Client
                     {
                         MessageBox.Show("Impossibile inviare il file " + file + " al server", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         Debug.WriteLine("Impossibile inviare il file " + file + " al server");
+                    }
+                }
+                else
+                {
+                    Debug.WriteLine(file + "is present");
+                    for (int i = 0; i < items.Count; i++)
+                    { 
+                        if (items[i] == item)
+                        {
+                            if (items[i].checksum.Equals(item.checksum))
+                            {
+                                items.Remove(items[i]);
+                            }
+                            else
+                            {
+                                Debug.WriteLine("checksums are different");
+                                try
+                                {
+                                    sendFileToServer(file);
+                                }
+                                catch (Exception)
+                                {
+                                    MessageBox.Show("Impossibile inviare il file " + file + " al server", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                    Debug.WriteLine("Impossibile inviare il file " + file + " al server");
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -596,11 +631,11 @@ namespace PDS_Client
                 if (!Encoding.ASCII.GetString(inBuff).Contains("OK")) throw new Exception("error: file not uploaded correctly");
 
                 // todo: calculate and send sha1 checksum
-                SHA1 shaProvider = SHA1.Create();
-                shaProvider.ComputeHash(new FileStream(path, FileMode.Open));
-                socket.Send(shaProvider.Hash);
+                
+                socket.Send(getSha1(path));
                 socket.Receive(inBuff);
                 if (!Encoding.ASCII.GetString(inBuff).Contains("OK")) MessageBox.Show("sha non accettato");
+
             });
         }
 
@@ -684,7 +719,8 @@ namespace PDS_Client
                     MessageBox.Show("Errore: La dimensione del file è negativa", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
-
+                if (!Directory.Exists("C:\\Temp"))
+                    Directory.CreateDirectory("C:\\Temp");
                 FileStream stream = new FileStream(tmp_path, FileMode.Create);
                 while (fDim > 0)
                 {
@@ -698,22 +734,12 @@ namespace PDS_Client
                 s.Send(Encoding.ASCII.GetBytes("OK"));
 
                 Debug.WriteLine("aspetto l'hash del server");
-                ricevuti = s.Receive(buffer); // this is server hash
-                SHA1 shaProvider = SHA1.Create();
-
-
-                FileStream tmpStr = new FileStream(tmp_path, FileMode.Open);
-                byte[] chash = shaProvider.ComputeHash(tmpStr);
-                tmpStr.Close();
-
-                Debug.WriteLine("Calcolo se gli hash sono uguali. |chash| = {0}, |shash| = {1}", chash.Length, ricevuti);
+                ricevuti = s.Receive(buffer); // this is server hash                
+                byte[] chash = getSha1(tmp_path);
+                                
                 buffer[ricevuti] = 0;
                 string str_chash = BitConverter.ToString(chash).Replace("-", "");
-                string str_shash = Encoding.ASCII.GetString(buffer, 0, 40).ToUpper();
-
-                Debug.WriteLine("{0}\n{1}", str_shash, str_chash);
-
-
+                string str_shash = Encoding.ASCII.GetString(buffer, 0, 40).ToUpper();             
 
                 if (!str_chash.Equals(str_shash))
                 {
@@ -764,7 +790,7 @@ namespace PDS_Client
                         });
                     }
                     else
-                        updateFolders();
+                        Dispatcher.Invoke(updateFolders);
 
                 }
 
@@ -776,6 +802,15 @@ namespace PDS_Client
             UTILITY FUNCTIONS, MOSTLY SETTERS
         */
 
+
+        private byte[] getSha1(string file)
+        {
+            SHA1 shaProvider = SHA1.Create();
+            FileStream hashStr = new FileStream(file, FileMode.Open);
+            shaProvider.ComputeHash(hashStr);
+            hashStr.Close();
+            return shaProvider.Hash;
+        }
         private void watchFolder()
         {
             fs = new FileSystemWatcher(currentDirectory);
@@ -908,7 +943,7 @@ namespace PDS_Client
             Monitor.Exit(saveFlag);
             ((UIElement)this.FindName("details_container")).Visibility = Visibility.Visible;
             // i start here a thread in order to download the versions of this file
-           // ((StackPanel)this.FindName("panel_details")).Children.Clear();
+            ((StackPanel)this.FindName("panel_details")).Children.Clear();
             string filename = (string)((TextBlock)((StackPanel)sender).Children[1]).Text;
             this.selectedFile = currentDirectory + "\\" + filename;
 
