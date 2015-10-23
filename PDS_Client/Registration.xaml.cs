@@ -11,6 +11,9 @@ using System.Windows.Media.Animation;
 using System;
 using System.Text;
 using System.IO;
+using System.Collections;
+using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace PDS_Client
 {
@@ -281,11 +284,19 @@ namespace PDS_Client
                         break;
                     }
 
-                    string stats = username + "\n" + password + "\n" + path;                   
+                    string stats = username + "\n" + password + "\n"+path;                   
                     byte[] protectedData = ProtectedData.Protect(Encoding.ASCII.GetBytes(stats), null, DataProtectionScope.CurrentUser);
                     FileStream str = File.OpenWrite("./polihub.settings");
                     str.Write(protectedData, 0, protectedData.Length);
                     str.Close();
+
+                   
+                    string paths = Encoding.ASCII.GetString(File.ReadAllBytes("./paths.settings"));
+                    List<JsonPaths> pths = JsonConvert.DeserializeObject<List<JsonPaths>>(paths);
+                    pths.Add(new JsonPaths(username, password));
+                    paths = JsonConvert.SerializeObject(paths);
+                    File.WriteAllBytes("./paths.settings", Encoding.UTF8.GetBytes(paths));
+
                     NetworkHandler.createInstance(username, password);
                     MainWindow mw = new MainWindow();
                     mw.setCurrentDirectory(path);

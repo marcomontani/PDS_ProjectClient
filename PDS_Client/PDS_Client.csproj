@@ -63,6 +63,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="JSONDeletedFile.cs" />
+    <Compile Include="JsonPaths.cs" />
     <Compile Include="JSONVersion.cs" />
     <Compile Include="NetworkHandler.cs" />
     <Compile Include="Registration.xaml.cs">
