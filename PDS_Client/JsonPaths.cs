@@ -12,7 +12,7 @@ namespace PDS_Client
         public JsonPaths(string username, string path)
         {
             this.path = path;
-            this.name = name;
+            this.name = username;
         }
         [JsonProperty("path")]
         public string path

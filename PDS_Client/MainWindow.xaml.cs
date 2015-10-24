@@ -35,7 +35,8 @@ namespace PDS_Client
         GET_DELETED_FILES = 7,
         GET_USER_FOLDER = 8,
         GET_USER_PATH = 9,
-        DOWNLOAD_LAST_VERSION = 10  
+        DOWNLOAD_LAST_VERSION = 10,
+        SEND_PATH = 11
     }
 
     

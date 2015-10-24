@@ -8,7 +8,10 @@ using System.Net;
 using System.Diagnostics;
 using System.Security.Cryptography;
 using System.IO;
-
+using System.Collections;
+using System.Collections.Generic;
+using Newtonsoft.Json;
+using Microsoft.Win32;
 
 namespace PDS_Client
 {
@@ -23,34 +26,42 @@ namespace PDS_Client
         public Window1()
         {
             InitializeComponent();
-            byte[] chifer = File.ReadAllBytes("./polihub.settings");
-            string plain = Encoding.ASCII.GetString(ProtectedData.Unprotect(chifer, null, DataProtectionScope.CurrentUser));
-            Debug.WriteLine(plain);
-            string[] credentials = plain.Split('\n');
-            if(credentials.Length == 3)
+
+            // todo: this shit does not work
+            RegistryKey rk = Registry.CurrentUser.OpenSubKey ("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+            rk.SetValue("PoliHub", Directory.GetCurrentDirectory() + "PDS_Client.exe"); // name , executablePath
+
+            if (File.Exists("./polihub.settings"))
             {
-                try
+                byte[] chifer = File.ReadAllBytes("./polihub.settings");
+                string plain = Encoding.ASCII.GetString(ProtectedData.Unprotect(chifer, null, DataProtectionScope.CurrentUser));
+                Debug.WriteLine(plain);
+                string[] credentials = plain.Split('\n');
+                if (credentials.Length == 3)
                 {
-                    createSocket();
-                    if (doLogin(credentials[0], credentials[1])) { 
-                    s.Close();
-
-
-
-                    MainWindow main = new MainWindow();
-                    NetworkHandler.createInstance(credentials[0], credentials[1]);
-                    main.setCurrentDirectory(credentials[2]);
-                    main.updateFolders();
-                    main.Show();
-                    main.sync();
-                    this.Close();
-                }
-                }
-                catch (SocketException)
-                {
-                    s = null;
+                    try
+                    {
+                        createSocket();
+                        if (doLogin(credentials[0], credentials[1]))
+                        {
+                            s.Close();
+                            NetworkHandler.createInstance(credentials[0], credentials[1], credentials[2]);
+                            MainWindow main = new MainWindow();
+                            main.setCurrentDirectory(credentials[2]);
+                            main.updateFolders();
+                            main.Show();
+                            main.sync();
+                            this.Close();
+                        }
+                    }
+                    catch (SocketException)
+                    {
+                        s = null;
+                    }
                 }
             }
+            else
+                Debug.WriteLine("polihub.settings does not exist");
         }
 
 
@@ -93,45 +104,70 @@ namespace PDS_Client
                 return;
 
 
-            
 
-            byte[] buffer = new byte[255];
-            
+            // i am logged. so let's try to read the path from path.settings
+
             string path = null;
-            s.Send(BitConverter.GetBytes((int)messages.GET_USER_PATH));
-            int r = s.Receive(buffer);
-
-            Debug.WriteLine("ricevuti: " + r);
-
-            // if error -1 is returned
-            if (r == 4)
+            if (File.Exists("./paths.settings"))
             {
-                if (BitConverter.ToInt32(buffer, 0) == -1)
+                byte[] msg = File.ReadAllBytes("./paths.settings");
+                List<JsonPaths> paths = JsonConvert.DeserializeObject<List<JsonPaths>>(Encoding.UTF8.GetString(msg));
+                foreach (JsonPaths p in paths)
                 {
-                    MessageBox.Show("Errore: non posso ottenere il path", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-
-                    return;
+                    Debug.WriteLine("username : " + p.name + " - path :" + p.path);
+                    if (p.name.Equals(username))
+                    {
+                        path = p.path;
+                        break;
+                    }
                 }
             }
-            if(r <= 0)
+            else
             {
-                MessageBox.Show("Errore: non posso ottenere il path", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
+                Debug.WriteLine("./path.settings non esiste");
             }
-            path = Encoding.ASCII.GetString(buffer);
 
-            Debug.Print("before delete: " + path + "\n");
+            if(path == null)
+            {
+                MessageBoxResult res = 
+                    MessageBox.Show("Errore : la cartella dell'utente scelto è stata rimossa. Vuoi scegliere un nuovo percorso per essa?", "Attenzione", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if(res == MessageBoxResult.No)
+                {
+                    s.Close();
+                    s = null;
+                    return;
+                }
+                else
+                {
+                    System.Windows.Forms.FolderBrowserDialog dialog = new System.Windows.Forms.FolderBrowserDialog();
+                    if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                    {
+                        path = dialog.SelectedPath;
+                        if(Directory.GetDirectories(path).Length != 0 || Directory.GetFiles(path).Length != 0)
+                        {
+                            path = null;
+                            MessageBox.Show("Errore : la cartella seleziona è vuota.", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                            s.Close();
+                            s = null;
+                            return;
+                        }
+                    }
+                }
+            }
+
+            // if i am gere path must be not null
+            if (path == null) throw new ArgumentNullException("path is null");
+            // write it on the settings file
+            string stats = username + "\n" + password + "\n" + path;
+            byte[] protectedData = ProtectedData.Protect(Encoding.ASCII.GetBytes(stats), null, DataProtectionScope.CurrentUser);
+            FileStream str = File.OpenWrite("./polihub.settings");
+            str.Write(protectedData, 0, protectedData.Length);
+            str.Close();
 
 
-            path = path.Remove(r);
-            
-            Debug.Print("after delete: " + path);
             s.Close();
-
-
-
             MainWindow main = new MainWindow();
-            NetworkHandler.createInstance(username, password);
+            NetworkHandler.createInstance(username, password, path);
             main.setCurrentDirectory(path);
             main.updateFolders();
             main.Show();
