@@ -34,7 +34,7 @@ namespace PDS_Client
             if (File.Exists("./polihub.settings"))
             {
                 byte[] chifer = File.ReadAllBytes("./polihub.settings");
-                string plain = Encoding.ASCII.GetString(ProtectedData.Unprotect(chifer, null, DataProtectionScope.CurrentUser));
+                string plain = Encoding.UTF8.GetString(ProtectedData.Unprotect(chifer, null, DataProtectionScope.CurrentUser));
                 Debug.WriteLine(plain);
                 string[] credentials = plain.Split('\n');
                 if (credentials.Length == 3)
@@ -159,7 +159,7 @@ namespace PDS_Client
             if (path == null) throw new ArgumentNullException("path is null");
             // write it on the settings file
             string stats = username + "\n" + password + "\n" + path;
-            byte[] protectedData = ProtectedData.Protect(Encoding.ASCII.GetBytes(stats), null, DataProtectionScope.CurrentUser);
+            byte[] protectedData = ProtectedData.Protect(Encoding.UTF8.GetBytes(stats), null, DataProtectionScope.CurrentUser);
             FileStream str = File.OpenWrite("./polihub.settings");
             str.Write(protectedData, 0, protectedData.Length);
             str.Close();
@@ -197,7 +197,7 @@ namespace PDS_Client
         {
             s.Send(BitConverter.GetBytes((int)messages.LOGIN), SocketFlags.None); // LOGIN
 
-            s.Send(Encoding.ASCII.GetBytes(username));
+            s.Send(Encoding.UTF8.GetBytes(username));
             byte[] buffer = new byte[255];
             s.Receive(buffer);
             if (Encoding.ASCII.GetString(buffer).Contains("ERR"))
@@ -205,7 +205,7 @@ namespace PDS_Client
                 MessageBox.Show("Errore: username non ricevuto correttamente", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
-            s.Send(Encoding.ASCII.GetBytes(password));
+            s.Send(Encoding.UTF8.GetBytes(password));
             s.Receive(buffer);
             string message = Encoding.ASCII.GetString(buffer);
             if (message.Contains("OK"))

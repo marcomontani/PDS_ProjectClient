@@ -242,7 +242,7 @@ namespace PDS_Client
 
                     string message = username;
 
-                    socket.Send(Encoding.ASCII.GetBytes(message), message.Length, SocketFlags.None);
+                    socket.Send(Encoding.UTF8.GetBytes(message));
 
                     byte[] buffer = new byte[10];
                     socket.Receive(buffer);
@@ -255,7 +255,7 @@ namespace PDS_Client
 
                     message = password;
 
-                    socket.Send(Encoding.ASCII.GetBytes(message), message.Length, SocketFlags.None);
+                    socket.Send(Encoding.UTF8.GetBytes(message));
 
                     buffer = new byte[10];
                     socket.Receive(buffer);
@@ -267,7 +267,7 @@ namespace PDS_Client
                     }
 
                     message = path;
-                    socket.Send(Encoding.ASCII.GetBytes(message), message.Length, SocketFlags.None);
+                    socket.Send(Encoding.UTF8.GetBytes(message));
                     buffer = new byte[10];
                     int r = socket.Receive(buffer);
                     message = Encoding.ASCII.GetString(buffer);
@@ -278,7 +278,7 @@ namespace PDS_Client
                     }
 
                     r = socket.Receive(buffer);
-                    message = Encoding.ASCII.GetString(buffer);
+                    message = Encoding.UTF8.GetString(buffer);
                     if (message.Contains("ERR"))
                     {
                         MessageBox.Show("Errore:impossibile creare il nuovo utente", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -286,7 +286,7 @@ namespace PDS_Client
                     }
 
                     string stats = username + "\n" + password + "\n" + path;
-                    byte[] protectedData = ProtectedData.Protect(Encoding.ASCII.GetBytes(stats), null, DataProtectionScope.CurrentUser);
+                    byte[] protectedData = ProtectedData.Protect(Encoding.UTF8.GetBytes(stats), null, DataProtectionScope.CurrentUser);
                     FileStream str = File.OpenWrite("./polihub.settings");
                     str.Write(protectedData, 0, protectedData.Length);
                     str.Close();
@@ -294,7 +294,7 @@ namespace PDS_Client
 
                     List<JsonPaths> pths = null;
                     if (File.Exists("./paths.settings")) { 
-                        string paths = Encoding.ASCII.GetString(File.ReadAllBytes("./paths.settings"));
+                        string paths = Encoding.UTF8.GetString(File.ReadAllBytes("./paths.settings"));
                         pths = JsonConvert.DeserializeObject<List<JsonPaths>>(paths);
                     }
                     if (pths == null) pths = new List<JsonPaths>();

@@ -146,7 +146,7 @@ namespace PDS_Client
             int inviati = s.Send(BitConverter.GetBytes(0)); // LOG IN
 
             string message = username;
-            s.Send(Encoding.ASCII.GetBytes(message), message.Length, SocketFlags.None);
+            s.Send(Encoding.UTF8.GetBytes(message));
 
             byte[] buffer = new byte[5];
             s.Receive(buffer);
@@ -159,7 +159,7 @@ namespace PDS_Client
 
             message = password;
 
-            s.Send(Encoding.ASCII.GetBytes(message), message.Length, SocketFlags.None);
+            s.Send(Encoding.UTF8.GetBytes(message));
 
             s.Receive(buffer);
             message = Encoding.ASCII.GetString(buffer);

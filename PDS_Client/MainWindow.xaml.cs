@@ -114,11 +114,11 @@ namespace PDS_Client
         private void syncFolder(Socket socket)
         {
             Debug.WriteLine("THREAD STARTED");
-            socket.Send(BitConverter.GetBytes(8));  // == ENUM.getUserFiles
+            socket.Send(BitConverter.GetBytes((int)messages.GET_USER_FOLDER)); 
             byte[] buffer = new byte[4096];
             
             int received = socket.Receive(buffer, 4096, SocketFlags.None);
-            string serverFolderDescription = Encoding.ASCII.GetString(buffer);
+            string serverFolderDescription = Encoding.UTF8.GetString(buffer);
             serverFolderDescription = serverFolderDescription.Remove(received);
             // now in the string we have the JSON string description. it is "[{"path":"...", "name":"......"}]"
 
@@ -611,7 +611,7 @@ namespace PDS_Client
         {
             NetworkHandler.getInstance().addFunction ( (Socket socket) => {
                 socket.Send(BitConverter.GetBytes((int)messages.UPLOAD_FILE)); // UPLOAD FILE
-                socket.Send(Encoding.ASCII.GetBytes(path));
+                socket.Send(Encoding.UTF8.GetBytes(path));
 
                 byte[] inBuff = new byte[1024];
                 socket.Receive(inBuff);
@@ -648,8 +648,9 @@ namespace PDS_Client
                 {
                     // downloading the last version
                     s.Send(BitConverter.GetBytes((int)messages.DOWNLOAD_LAST_VERSION));
-                    s.Send(BitConverter.GetBytes(path.Length));
-                    s.Send(Encoding.ASCII.GetBytes(path));
+                    s.Send(BitConverter.GetBytes(ASCIIEncoding.UTF8.GetByteCount(path)));
+                    
+                    Debug.WriteLine("path length = " +s.Send(Encoding.UTF8.GetBytes(path)));
                     // check if it's ok
                 
                     ricevuti = s.Receive(buffer);
@@ -664,11 +665,11 @@ namespace PDS_Client
                 else
                 {
                     // downloading a specific old version
-                    s.Send(BitConverter.GetBytes((int)messages.DOWNLOAD_PREVIOUS_VERSION));
+                s.Send(BitConverter.GetBytes((int)messages.DOWNLOAD_PREVIOUS_VERSION));
                 Debug.WriteLine("voglio scaricare la versione del {0} di {1}", version, path);
                 // sending path
-                s.Send(BitConverter.GetBytes(path.Length));
-                s.Send(Encoding.ASCII.GetBytes(path));
+                s.Send(BitConverter.GetBytes(ASCIIEncoding.UTF8.GetByteCount(path)));
+                s.Send(Encoding.UTF8.GetBytes(path));
                 // check if it's ok
                     
                     ricevuti = s.Receive(buffer);
@@ -681,8 +682,8 @@ namespace PDS_Client
                 }
 
                 // sending path
-                s.Send(BitConverter.GetBytes(version.Length));
-                s.Send(Encoding.ASCII.GetBytes(version));
+                s.Send(BitConverter.GetBytes(System.Text.ASCIIEncoding.UTF8.GetByteCount(version)));
+                s.Send(Encoding.UTF8.GetBytes(version));
                 // check if it's ok
                 ricevuti = s.Receive(buffer);
                 buffer[ricevuti] = (byte)'\0';
@@ -764,6 +765,7 @@ namespace PDS_Client
                 fs.EnableRaisingEvents = false;
                 Debug.WriteLine("File.Delete( " + path + " );");
                 if(version != null) File.Delete(path);
+                if(File.Exists(path)) File.Delete(path);
                 Debug.WriteLine("File.Move({0}, {1});", path+".tmp", path);
                 File.Move(tmp_path, path);
                 fs.EnableRaisingEvents = true;
@@ -802,7 +804,7 @@ namespace PDS_Client
             byte[] buffer = new byte[dimension];
             ricevuti = s.Receive(buffer);
 
-            string delFiles = Encoding.ASCII.GetString(buffer);
+            string delFiles = Encoding.UTF8.GetString(buffer);
             List<JSONDeletedFile> items = JsonConvert.DeserializeObject<List<JSONDeletedFile>>(delFiles);
             return items;
         }
@@ -825,7 +827,6 @@ namespace PDS_Client
             fs.Deleted += new FileSystemEventHandler(OnChanged);
 
             fs.IncludeSubdirectories = true;
-            fs.NotifyFilter = NotifyFilters.FileName;
             fs.EnableRaisingEvents = true;
 
         }
@@ -881,6 +882,8 @@ namespace PDS_Client
         {
             // Specify what is done when a file is changed, created, or deleted.
             //MessageBox.Show("File: " + e.FullPath + " " + e.ChangeType);
+            Debug.WriteLine("\n\nInto onchanged  for " + e.FullPath + "\n");
+            if (!e.FullPath.Contains(".")) return; // if it is a folder i am not interested
             Monitor.Enter(events_semaphore);
             queueObject q = new queueObject();
             q.file = e.FullPath; q.type = e.ChangeType;
@@ -910,7 +913,7 @@ namespace PDS_Client
             {
                 byte[] buffer = new byte[5];
                 socket.Send(BitConverter.GetBytes(4));
-                socket.Send(Encoding.ASCII.GetBytes(path));
+                socket.Send(Encoding.UTF8.GetBytes(path));
                 socket.Receive(buffer);
                 if (Encoding.ASCII.GetString(buffer).Contains("ERR"))
                     MessageBox.Show("Errore: errore nel comunicare al server che il file " + path + "e' stato cancellato", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -980,8 +983,8 @@ namespace PDS_Client
                socket.Send(BitConverter.GetBytes(5)); // GET FILE VERSIONS
 
                string pathToSend = currentDirectory + "\\" + filename;
-               socket.Send(BitConverter.GetBytes(pathToSend.Length));
-               socket.Send(Encoding.ASCII.GetBytes(pathToSend));
+               socket.Send(BitConverter.GetBytes(ASCIIEncoding.UTF8.GetByteCount(pathToSend)));
+               socket.Send(Encoding.UTF8.GetBytes(pathToSend));
                Debug.WriteLine("sent " + pathToSend);
 
 
@@ -1004,7 +1007,7 @@ namespace PDS_Client
                byte[] buff = new byte[BitConverter.ToInt32(dim, 0)+1];
                socket.Receive(buff); // receive json
 
-               string versions = Encoding.ASCII.GetString(buff);
+               string versions = Encoding.UTF8.GetString(buff);
 
                Debug.WriteLine(versions);
 
@@ -1080,7 +1083,7 @@ namespace PDS_Client
                 byte[] buffer = new byte[dimension];
                 ricevuti = socket.Receive(buffer);
 
-                string s = Encoding.ASCII.GetString(buffer);
+                string s = Encoding.UTF8.GetString(buffer);
                 List<JSONDeletedFile> items = JsonConvert.DeserializeObject<List<JSONDeletedFile>>(s);
 
                 Dispatcher.Invoke(() => {
