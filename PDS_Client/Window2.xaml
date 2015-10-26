@@ -13,13 +13,13 @@
             <ColumnDefinition Width="333*"/>
         </Grid.ColumnDefinitions>
         <TextBlock Foreground="AliceBlue" x:Name="textBlock" HorizontalAlignment="Left" Margin="30,16,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="352" Height="53" Grid.ColumnSpan="2"><Run Text="Il "/><Run Text="seguente file "/><Run Text="è stato cancellato dalla sua posizione"/><Run Text=" originaria"/><Run Text=". Clicca "/><Run Text="Ripristina"/><Run Text=" per salvare sul tuo computer l'ultima versione o scegli Cancella per rimuoverlo in modo definitivo."/><Run Text=" "/><Run Text=" "/></TextBlock>
-        <Button x:Name="button" HorizontalAlignment="Left" Background="#4B4C5D" Margin="0,114,0,0" VerticalAlignment="Top" Width="100" Grid.ColumnSpan="1" Grid.Column="1">
+        <Button x:Name="button" HorizontalAlignment="Left" Background="#4B4C5D" Margin="0,114,0,0" VerticalAlignment="Top" Width="100" Grid.ColumnSpan="1" Grid.Column="1" Click="button_Click">
             <StackPanel Orientation="Horizontal">
                 <Image Width="27" Source="images/confirm.png"></Image>
                 <TextBlock Foreground="AliceBlue" Text="Ripristina" Margin="7,5,0,0" />
             </StackPanel>
         </Button>
-        <Button x:Name="button2" Background="#4B4C5D" Margin="174,114,59,0" VerticalAlignment="Top" Grid.ColumnSpan="1" Grid.Column="1">
+        <Button x:Name="button2" Background="#4B4C5D" Margin="174,114,59,0" VerticalAlignment="Top" Grid.ColumnSpan="1" Grid.Column="1" Click="button2_Click">
             <StackPanel Orientation="Horizontal">
                 <Image Width="27" Source="images/delete.png" ></Image>
                 <TextBlock Foreground="AliceBlue" Text="Cancella" Margin="7,5,0,0" RenderTransformOrigin="0.5,0.5" >
@@ -34,7 +34,7 @@
                 </TextBlock>
             </StackPanel>
         </Button>
-        <TextBlock FontSize="18" TextAlignment="Center" Foreground="AliceBlue" x:Name="textBlock_Copy" HorizontalAlignment="Left" Margin="1,72,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="391" Height="53" Text="C:\\Gaetano\Blastoise.pkm" Grid.ColumnSpan="2"/>
+        <TextBlock FontSize="18" TextAlignment="Center" Foreground="AliceBlue" x:Name="filename_msg" HorizontalAlignment="Left" Margin="1,72,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="391" Height="53" Text="C:\\Gaetano\Blastoise.pkm" Grid.ColumnSpan="2"/>
 
     </Grid>
 </Window>

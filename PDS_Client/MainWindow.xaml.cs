@@ -93,8 +93,10 @@ namespace PDS_Client
                 rowElements = (int)(d / 100) + 1;
                 addCurrentFoderInfo(currentDirectory);
                 updateAddress();
-                
+               
+
             };
+            
             // <Label x:Name="label" Background="#2C4566" Foreground="AliceBlue" Content="C:\\" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="2,2,0,0"/>
 
 
@@ -954,7 +956,6 @@ namespace PDS_Client
 
         private void MouseFileButtonDownHandler(object sender, RoutedEventArgs e) {
 
-            
             Debug.WriteLine("MouseFileButtonDownHandler called");
 
             //  Grid.SetColumnSpan((UIElement)this.FindName("fs_grid"), 1);
@@ -1093,13 +1094,12 @@ namespace PDS_Client
         private void MouseFileThrashHandler(object sender, RoutedEventArgs e)
         {
             string path = ((TextBlock)((Panel)sender).Children[2]).Text + "\\" + ((TextBlock)((Panel)sender).Children[1]).Text;
-            MessageBoxResult res =  MessageBox.Show("Vuoi davvero ripristinare il file " + path + "?", "Ripristino", MessageBoxButton.YesNo, MessageBoxImage.Question);
-            if (res == MessageBoxResult.No) return;
-            downloadFile(path, null);
-            if (false)
-            {
-                removeFilePermanently(path);
-            }
+            //MessageBoxResult res =  MessageBox.Show("Vuoi davvero ripristinare il file " + path + "?", "Ripristino", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            var win2 = new Window2();
+            var res = win2.Show_D(path);
+            if (res == System.Windows.Forms.DialogResult.Cancel) return;
+            if(res== System.Windows.Forms.DialogResult.Yes)downloadFile(path, null);
+            if(res == System.Windows.Forms.DialogResult.Abort)removeFilePermanently(path);
         }
 
         private void closeVersions(object sender, MouseButtonEventArgs e)
