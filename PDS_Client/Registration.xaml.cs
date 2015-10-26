@@ -53,7 +53,6 @@ namespace PDS_Client
             catch(SocketException se)
             {
                 MessageBox.Show(se.Message);
-                // todo: send a popup ( "impossibile connettersi al server " )
             }
             
         }
@@ -124,7 +123,7 @@ namespace PDS_Client
 
 
         private void handleNewStatus()
-        {           
+        {
 
             switch (status)
             {
@@ -170,8 +169,8 @@ namespace PDS_Client
 
                     ((PasswordBox)this.FindName("pwd_wizard")).Visibility = Visibility.Visible;
                     ((TextBox)this.FindName("txt_wizard")).Visibility = Visibility.Collapsed;
-                    
-                    password = ((PasswordBox)this.FindName("pwd_wizard")).Password;                                   
+
+                    password = ((PasswordBox)this.FindName("pwd_wizard")).Password;
                     if (password == null || password.Equals(""))
                     {
                         ((TextBlock)this.FindName("text_error")).Text = "Non hai inserito nessuna password";
@@ -228,20 +227,22 @@ namespace PDS_Client
                     path = ((TextBox)this.FindName("txt_wizard")).Text;
                     Socket socket = null;
 
-                    try {
+                    try
+                    {
                         socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                         socket.Connect(IPAddress.Parse("127.0.0.1"), 7000);
-                    } catch (SocketException se)
+                    }
+                    catch (SocketException se)
                     {
                         MessageBox.Show("Errore Nella connessione al server: codice" + se.ErrorCode, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         break;
                     }
-                    
+
                     int inviati = socket.Send(BitConverter.GetBytes(1)); // SIGN IN
-                    
+
                     string message = username;
-         
-                    socket.Send(Encoding.ASCII.GetBytes(message), message.Length, SocketFlags.None);
+
+                    socket.Send(Encoding.UTF8.GetBytes(message));
 
                     byte[] buffer = new byte[10];
                     socket.Receive(buffer);
@@ -254,7 +255,7 @@ namespace PDS_Client
 
                     message = password;
 
-                    socket.Send(Encoding.ASCII.GetBytes(message), message.Length, SocketFlags.None);
+                    socket.Send(Encoding.UTF8.GetBytes(message));
 
                     buffer = new byte[10];
                     socket.Receive(buffer);
@@ -264,9 +265,9 @@ namespace PDS_Client
                         MessageBox.Show("Errore nella password", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         break;
                     }
-                    
+
                     message = path;
-                    socket.Send(Encoding.ASCII.GetBytes(message), message.Length, SocketFlags.None);
+                    socket.Send(Encoding.UTF8.GetBytes(message));
                     buffer = new byte[10];
                     int r = socket.Receive(buffer);
                     message = Encoding.ASCII.GetString(buffer);
@@ -277,25 +278,28 @@ namespace PDS_Client
                     }
 
                     r = socket.Receive(buffer);
-                    message = Encoding.ASCII.GetString(buffer);
+                    message = Encoding.UTF8.GetString(buffer);
                     if (message.Contains("ERR"))
                     {
                         MessageBox.Show("Errore:impossibile creare il nuovo utente", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         break;
                     }
 
-                    string stats = username + "\n" + password + "\n"+path;                   
-                    byte[] protectedData = ProtectedData.Protect(Encoding.ASCII.GetBytes(stats), null, DataProtectionScope.CurrentUser);
+                    string stats = username + "\n" + password + "\n" + path;
+                    byte[] protectedData = ProtectedData.Protect(Encoding.UTF8.GetBytes(stats), null, DataProtectionScope.CurrentUser);
                     FileStream str = File.OpenWrite("./polihub.settings");
                     str.Write(protectedData, 0, protectedData.Length);
                     str.Close();
 
-                   
-                    string paths = Encoding.ASCII.GetString(File.ReadAllBytes("./paths.settings"));
-                    List<JsonPaths> pths = JsonConvert.DeserializeObject<List<JsonPaths>>(paths);
-                    pths.Add(new JsonPaths(username, password));
-                    paths = JsonConvert.SerializeObject(paths);
-                    File.WriteAllBytes("./paths.settings", Encoding.UTF8.GetBytes(paths));
+
+                    List<JsonPaths> pths = null;
+                    if (File.Exists("./paths.settings")) { 
+                        string paths = Encoding.UTF8.GetString(File.ReadAllBytes("./paths.settings"));
+                        pths = JsonConvert.DeserializeObject<List<JsonPaths>>(paths);
+                    }
+                    if (pths == null) pths = new List<JsonPaths>();
+                    pths.Add(new JsonPaths(username, path));
+                    File.WriteAllBytes("./paths.settings", Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(pths)));
 
                     NetworkHandler.createInstance(username, password);
                     MainWindow mw = new MainWindow();

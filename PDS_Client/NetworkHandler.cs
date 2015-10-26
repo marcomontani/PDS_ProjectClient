@@ -24,9 +24,7 @@ namespace PDS_Client
         Mutex fsemaphore, d_semaphore;
         volatile Boolean die;
 
-
-
-        private NetworkHandler(string username, string password)
+        private NetworkHandler(string username, string password, string path)
         {
             die = false;
             fsemaphore = new Mutex();
@@ -56,6 +54,7 @@ namespace PDS_Client
                         // this should never happen because i just checked in the login the fact that it's all ok
                     }
                     logIn(s, username, password);
+                    if (path.Length != 0) sendFolder(s, path);
 
                     while (!value)
                     {
@@ -98,9 +97,15 @@ namespace PDS_Client
         }
 
 
+        public static void createInstance(string username, string password, string path)
+        {
+            if (This == null) This = new NetworkHandler(username, password, path);
+        }
+
         public static void createInstance(string username, string password)
         {
-            if (This == null)  This = new NetworkHandler(username, password);
+            if (This == null)  This = new NetworkHandler(username, password, "");
+            
         }
 
         // Implementation of NetworkHandler as singleton object
@@ -141,7 +146,7 @@ namespace PDS_Client
             int inviati = s.Send(BitConverter.GetBytes(0)); // LOG IN
 
             string message = username;
-            s.Send(Encoding.ASCII.GetBytes(message), message.Length, SocketFlags.None);
+            s.Send(Encoding.UTF8.GetBytes(message));
 
             byte[] buffer = new byte[5];
             s.Receive(buffer);
@@ -154,7 +159,7 @@ namespace PDS_Client
 
             message = password;
 
-            s.Send(Encoding.ASCII.GetBytes(message), message.Length, SocketFlags.None);
+            s.Send(Encoding.UTF8.GetBytes(message));
 
             s.Receive(buffer);
             message = Encoding.ASCII.GetString(buffer);
@@ -166,31 +171,13 @@ namespace PDS_Client
 
             // if i am here i am logged!
             return true;
-
-
-            /*
-            message = path;
-            socket.Send(Encoding.ASCII.GetBytes(message), message.Length, SocketFlags.None);
-            buffer = new byte[10];
-            int r = socket.Receive(buffer);
-            message = Encoding.ASCII.GetString(buffer);
-            if (message.Contains("ERR"))
-            {
-                MessageBox.Show("Errore nel path", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                break;
-            }
-
-            r = socket.Receive(buffer);
-            message = Encoding.ASCII.GetString(buffer);
-            if (message.Contains("ERR"))
-            {
-                MessageBox.Show("Errore:impossibile creare il nuovo utente", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                
-            }
-            */
         }
 
-
+        private void sendFolder(Socket s, string folder)
+        {    
+            s.Send(BitConverter.GetBytes((int)messages.SEND_PATH));
+            s.Send(Encoding.UTF8.GetBytes(folder));   
+        }
 
     }
 }
