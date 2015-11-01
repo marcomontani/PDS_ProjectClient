@@ -26,10 +26,15 @@ namespace PDS_Client
         {
             get; set;
         }
+        [JsonProperty("lastModified")]
+        public string date
+        {
+            get; set;
+        }
 
         public static bool operator ==(JSON_Folder_Items a, JSON_Folder_Items b)
         {
-            if(a.name == b.name && a.path == b.path) return true;
+            if(a.name.Equals(b.name) && a.path.Equals(b.path)) return true;
             return false;
         }
         public static bool operator !=(JSON_Folder_Items a, JSON_Folder_Items b)

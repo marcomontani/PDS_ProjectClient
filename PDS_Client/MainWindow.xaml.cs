@@ -131,7 +131,8 @@ namespace PDS_Client
             Debug.WriteLine("The server has {0} files more then me. i need to download them", items.Count);
             foreach (JSON_Folder_Items it in items)
             {
-                Debug.WriteLine("{0}{1}", it.path, it.name);
+                if (it.path.Length > 0) Debug.Write("{0}\\", it.path);
+                Debug.WriteLine("{0}", it.name);
                 downloadFile(it.path +"\\"+ it.name, null);
             }           
 
@@ -149,6 +150,7 @@ namespace PDS_Client
                 item.checksum = BitConverter.ToString(getSha1(file)).Replace("-", "").ToLower();
                 if (!items.Contains(item))
                 {
+                    Debug.WriteLine(file + "is NOT present");
                     try
                     {
                         sendFileToServer(file);
@@ -173,14 +175,34 @@ namespace PDS_Client
                             else
                             {
                                 Debug.WriteLine("checksums are different");
-                                try
+
+                                // i need to get the date of last modify
+
+                                DateTime lastModified = File.GetLastWriteTime(file);
+
+                                if (lastModified.CompareTo(DateTime.Parse(items[i].date)) > 0) // this means that the server has an older version 
                                 {
-                                    sendFileToServer(file);
+                                    try
+                                    {
+                                        sendFileToServer(file);
+                                    }
+                                    catch (Exception)
+                                    {
+                                        MessageBox.Show("Impossibile inviare il file " + file + " al server", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                        Debug.WriteLine("Impossibile inviare il file " + file + " al server");
+                                    }
                                 }
-                                catch (Exception)
+                                else // the version of the server is more recent than mine
                                 {
-                                    MessageBox.Show("Impossibile inviare il file " + file + " al server", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                    Debug.WriteLine("Impossibile inviare il file " + file + " al server");
+                                    try {
+                                        downloadFile(file, null);
+                                    }
+                                    catch (Exception)
+                                    {
+                                        MessageBox.Show("Impossibile scaricare il file " + file + " dal server", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                        Debug.WriteLine("Impossibile scaricare il file " + file + " dal server");
+                                    }
+
                                 }
                             }
                         }
