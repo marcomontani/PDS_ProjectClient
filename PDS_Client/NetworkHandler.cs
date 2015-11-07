@@ -29,9 +29,9 @@ namespace PDS_Client
             die = false;
             fsemaphore = new Mutex();
             d_semaphore = new Mutex();
-            threads = new Thread[1];
+            threads = new Thread[3];
             functions = new Queue<Action<Socket>>();
-            for (int i = 0; i < 1; i++)
+            for (int i = 0; i < 3; i++)
             {
                 threads[i] = new Thread(() => {
                     Monitor.Enter(d_semaphore);
@@ -76,15 +76,35 @@ namespace PDS_Client
                         }
                         Action<Socket> f = functions.Dequeue();
                         Monitor.Exit(fsemaphore);
-                        try {
-                            f(s);
-                        }
-                        catch(SocketException se)
+
+                        // is the socket still valid?
+                        if (s == null) // no it's not
                         {
-                            // this means an error on the network.
-                            return; // i make the thread die
+                            try
+                            {
+                                s = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                                s.Connect("127.0.0.1", 7000);
+                            }
+                            catch (SocketException)
+                            {
+                                MessageBox.Show("Impossibile completare l'operazione richiesta, server non raggiungibile", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                                s = null;
+                            }
                         }
 
+                        if (s != null) // i need this because if s was null and connect failed, i must not call f(s) or it will throw an exception because socket is null
+                        {
+                            try
+                            {
+                                f(s);
+                            }
+                            catch (SocketException)
+                            {
+                                s = null; // this means an error on the network.
+                                // maybe send an exit here, jst to be sure?
+                                // disconnect the socket
+                            }
+                        }
                         Monitor.Enter(d_semaphore);
                         value = die;
                         Monitor.Exit(d_semaphore);
@@ -178,6 +198,9 @@ namespace PDS_Client
             s.Send(BitConverter.GetBytes((int)messages.SEND_PATH));
             s.Send(Encoding.UTF8.GetBytes(folder));   
         }
+
+
+
 
     }
 }
