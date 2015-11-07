@@ -847,7 +847,12 @@ namespace PDS_Client
             fs.Changed += new FileSystemEventHandler(OnChanged);
             fs.Created += new FileSystemEventHandler(OnChanged);
             fs.Deleted += new FileSystemEventHandler(OnChanged);
-
+            fs.Renamed += new RenamedEventHandler((object source, RenamedEventArgs e) =>
+            {
+                fileDeleted(e.OldFullPath);
+                sendFileToServer(e.FullPath);
+                
+            });
             fs.IncludeSubdirectories = true;
             fs.EnableRaisingEvents = true;
 
@@ -903,7 +908,6 @@ namespace PDS_Client
         private void OnChanged(object source, FileSystemEventArgs e)
         {
             // Specify what is done when a file is changed, created, or deleted.
-            //MessageBox.Show("File: " + e.FullPath + " " + e.ChangeType);
             Debug.WriteLine("\n\nInto onchanged  for " + e.FullPath + "\n");
             if (!e.FullPath.Contains(".")) return; // if it is a folder i am not interested
             Monitor.Enter(events_semaphore);
