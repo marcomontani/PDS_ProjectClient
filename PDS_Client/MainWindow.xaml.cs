@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Controls;
@@ -12,10 +11,9 @@ using System.Security.Cryptography;
 using System.Windows.Media.Imaging;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
-using System.Windows.Shapes;
 using System.Diagnostics;
 using System.Threading;
-using System.Drawing;
+
 
 namespace PDS_Client
 {
@@ -70,6 +68,7 @@ namespace PDS_Client
         Mutex saveFlag;
         string selectedFile;
         FileSystemWatcher fs;
+        System.Windows.Forms.NotifyIcon noty;
 
 
 
@@ -77,6 +76,33 @@ namespace PDS_Client
         {
             InitializeComponent();
             fs = null;
+
+            noty = new System.Windows.Forms.NotifyIcon();
+            noty.Icon = new System.Drawing.Icon(@"images\\ico.ico");
+            noty.DoubleClick += (s,e) =>
+            {
+                this.Show();
+                noty.Visible = false;
+            };
+            System.Windows.Forms.ContextMenu menu = new System.Windows.Forms.ContextMenu();
+            menu.MenuItems.Add("Apri");
+            menu.MenuItems.Add("Esci");
+            menu.MenuItems[0].Click += (s,e) =>
+            {
+                this.Show();
+                noty.Visible = false;
+            };
+            menu.MenuItems[1].Click += (s, e) =>
+            {                
+                noty.Visible = false;
+                NetworkHandler.getInstance().killWorkers();
+                NetworkHandler.deleteInstance();
+                noty = null;
+                Environment.Exit(0);
+            };
+
+            noty.ContextMenu = menu;
+            
             saveFlag = new Mutex();
             ((UIElement)this.FindName("details_container")).Visibility = Visibility.Collapsed;
             currentDirectory = "C:";
@@ -215,6 +241,7 @@ namespace PDS_Client
 
         public void updateAddress()
         {
+            
             StackPanel sp = ((StackPanel)FindName("address"));
             sp.Children.Clear();
             var bc = new BrushConverter();
@@ -230,6 +257,7 @@ namespace PDS_Client
             rt.VerticalContentAlignment = VerticalAlignment.Center;
             rt.HorizontalAlignment = HorizontalAlignment.Left;
             rt.MouseLeftButtonDown += (s, e) => {
+                if (((UIElement)this.FindName("details_container")).Visibility != Visibility.Collapsed) return;
                 ((StackPanel)this.FindName("fs_grid")).Children.Clear();
                 currentDirectory = root;
                 updateAddress();
@@ -261,6 +289,7 @@ namespace PDS_Client
                 lb.BorderBrush = System.Windows.Media.Brushes.LightGray;
                 lb.HorizontalAlignment = HorizontalAlignment.Left;
                 lb.MouseLeftButtonDown += (s, e) => {
+                    if (((UIElement)this.FindName("details_container")).Visibility != Visibility.Collapsed) return;
                     ((StackPanel)this.FindName("fs_grid")).Children.Clear();
                     currentDirectory = "";
                     foreach (string a in perc)
@@ -369,7 +398,7 @@ namespace PDS_Client
 
         private Border getCalendar(string date, BrushConverter bc, string completePath)
         {
-            string hour_s = date.Split(' ')[1];
+            string hour_s = date.Split(' ')[1].Split(':')[0]+":"+date.Split(' ')[1].Split(':')[1];
             string year_s = date.Split(' ')[0].Split('-')[0];
             string month_s = date.Split(' ')[0].Split('-')[1];
             string day_s = date.Split(' ')[0].Split('-')[2];
@@ -474,13 +503,13 @@ namespace PDS_Client
             pixel.Source = new BitmapImage(new Uri(@"\images\pixelart.png", UriKind.RelativeOrAbsolute));
             pixel.Height = 977;
             pixel.Margin = new Thickness(782, 0, 0, 0);
-            g.Children.Clear();
+            if (!path.Equals("trash")) g.Children.Clear();
             
             StackPanel hpanel = null;
             int i = rowElements;
 
             // code to add the thrash folder
-
+            if (path.Equals("trash")) return;
             List<string> lista = new List<string>(Directory.GetDirectories(path));
             if (path.Equals(root)) lista.Add("\\Cestino");
             foreach (string dir in lista)
@@ -962,18 +991,13 @@ namespace PDS_Client
 
         private void mouse_x_click(object sender, RoutedEventArgs e)
         {
-            // todo: send to try bar
-            this.Close();
-
-            /* CODICE PROVVISORIO*/
-            NetworkHandler.getInstance().killWorkers();
-            NetworkHandler.deleteInstance();
-
+            this.Hide();
+            noty.Visible = true;
         }
 
         private void MouseFolderButtonDownHandler(object sender, MouseButtonEventArgs e)
         {
-
+            if (((UIElement)this.FindName("details_container")).Visibility != Visibility.Collapsed) return;
             ((StackPanel)this.FindName("fs_grid")).Children.Clear(); // remove all childs
             Panel p = (Panel)sender;
             TextBlock lblDirectory = (TextBlock)p.Children[1];            
@@ -1073,9 +1097,8 @@ namespace PDS_Client
 
         private void MouseTrashHandler(object sender, RoutedEventArgs e)
         {
+            if (((UIElement)this.FindName("details_container")).Visibility != Visibility.Collapsed) return;
             currentDirectory = "trash";
-
-
             StackPanel sp = ((StackPanel)FindName("address"));
             Label rt = new Label();
             rt.Background = System.Windows.Media.Brushes.DarkRed;
@@ -1155,8 +1178,12 @@ namespace PDS_Client
             ((UIElement)this.FindName("details_container")).Visibility = Visibility.Collapsed;
             //Grid.SetColumnSpan((UIElement)this.FindName("fs_grid"), 7);
             // rowElements = 10;
-            ((StackPanel)this.FindName("fs_grid")).Children.Clear();
-            addCurrentFoderInfo(currentDirectory);
+            
+            if (!currentDirectory.Equals("trash"))
+            {
+                ((StackPanel)this.FindName("fs_grid")).Children.Clear();
+                addCurrentFoderInfo(currentDirectory);
+            }
             setFlag(true);
         }
 
