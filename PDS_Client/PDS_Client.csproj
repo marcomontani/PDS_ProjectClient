@@ -65,6 +65,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="DownloadManager.cs" />
     <Compile Include="JSONDeletedFile.cs" />
     <Compile Include="JsonPaths.cs" />
     <Compile Include="JSONVersion.cs" />

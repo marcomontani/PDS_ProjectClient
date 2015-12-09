@@ -740,7 +740,7 @@ namespace PDS_Client
                 s.Send(Encoding.UTF8.GetBytes(path));
                 // check if it's ok
                     
-                    ricevuti = s.Receive(buffer);
+                ricevuti = s.Receive(buffer);
                 buffer[ricevuti] = (byte)'\0';
                 string msg = Encoding.ASCII.GetString(buffer);
                 if (ricevuti != 2 || !msg.Contains("OK")) // there was an error
@@ -764,8 +764,11 @@ namespace PDS_Client
                 }
 
 
-                
-                string tmp_path = "C:\\Temp\\polihub.tmp"; // what if that file is already there?
+
+
+                string[] path_arr = path.Split('\\');
+                string[] fileext = path_arr[path_arr.Length - 1].Split('.');
+                string tmp_path = "C:\\Temp\\"+ fileext[0] + ".tmp"; // what if that file is already there? it is deleted by file create
                 
                 
 
@@ -832,7 +835,6 @@ namespace PDS_Client
 
                 fs.EnableRaisingEvents = false;
                 Debug.WriteLine("File.Delete( " + path + " );");
-                if(version != null) File.Delete(path);
                 if(File.Exists(path)) File.Delete(path);
                 Debug.WriteLine("File.Move({0}, {1});", path+".tmp", path);
                 File.Move(tmp_path, path);
@@ -853,6 +855,7 @@ namespace PDS_Client
                         Dispatcher.Invoke(updateFolders);
 
                 }
+                
 
                 return; 
             });
