@@ -13,7 +13,8 @@ using System.Windows.Input;
 using System.Windows.Media.Animation;
 using System.Diagnostics;
 using System.Threading;
-
+using System.Drawing.Imaging;
+using System.Drawing;
 
 namespace PDS_Client
 {
@@ -477,9 +478,23 @@ namespace PDS_Client
 
             //  <Image Source="images/download.png"  Margin="45,10,0,0" Width="30"/>
             System.Windows.Controls.Image dwn = new System.Windows.Controls.Image();
+            
             dwn.Source = new BitmapImage(new Uri(@"\images\download.png", UriKind.RelativeOrAbsolute));
+
             dwn.Width = 50;
             dwn.Margin = new Thickness(45, 5, 0, 0);
+            dwn.MouseEnter  += (s, e) =>
+             {
+                 //dwn.Source = new BitmapImage(new Uri(@"\images\downloadhigh.png", UriKind.RelativeOrAbsolute));
+                 dwn.Source = new BitmapImage(new Uri(@"\images\down.gif", UriKind.RelativeOrAbsolute));
+                 dwn.BeginAnimation(null,null);
+                 return;
+             };
+            dwn.MouseLeave += (s, e) =>
+            {
+                dwn.Source = new BitmapImage(new Uri(@"\images\download.png", UriKind.RelativeOrAbsolute));
+                return;
+            };
 
             calendar.Children.Add(year);
             calendar.Children.Add(day);
