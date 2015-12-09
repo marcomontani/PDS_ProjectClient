@@ -15,10 +15,11 @@ using System.Diagnostics;
 using System.Threading;
 using System.Drawing.Imaging;
 using System.Drawing;
+using WpfAnimatedGif;
 
 namespace PDS_Client
 {
-    /// <summary>
+    ///// <summary>
     /// Logica di interazione per MainWindow.xaml
     /// </summary>
     /// 
@@ -65,6 +66,7 @@ namespace PDS_Client
         string root;
         bool first = true;
         bool flag = true;
+        bool downflag = true;
         string[] months = { "GEN", "FEB","MAR","APR","MAG","GIU","LUG","AGO","SET","OTT","NOV","DIC"};
         Mutex saveFlag;
         string selectedFile;
@@ -397,7 +399,7 @@ namespace PDS_Client
             }
         }
 
-        private Border getCalendar(string date, BrushConverter bc, string completePath)
+        private Border getCalendar(string date, BrushConverter bc, string completePath ,string filename)
         {
             string hour_s = date.Split(' ')[1].Split(':')[0]+":"+date.Split(' ')[1].Split(':')[1];
             string year_s = date.Split(' ')[0].Split('-')[0];
@@ -410,11 +412,7 @@ namespace PDS_Client
             brd.Height = 80;
 
             StackPanel sline = new StackPanel();
-            sline.Orientation = Orientation.Horizontal;
-            sline.MouseLeftButtonDown += (object sender, MouseButtonEventArgs e) =>
-            {
-                downloadFile(completePath, date);
-            };
+            sline.Orientation = Orientation.Horizontal;          
 
             StackPanel calendar = new StackPanel();
             calendar.Background = (System.Windows.Media.Brush)bc.ConvertFrom("#D2691E");
@@ -480,20 +478,39 @@ namespace PDS_Client
             System.Windows.Controls.Image dwn = new System.Windows.Controls.Image();
             
             dwn.Source = new BitmapImage(new Uri(@"\images\download.png", UriKind.RelativeOrAbsolute));
-
             dwn.Width = 50;
             dwn.Margin = new Thickness(45, 5, 0, 0);
             dwn.MouseEnter  += (s, e) =>
              {
-                 //dwn.Source = new BitmapImage(new Uri(@"\images\downloadhigh.png", UriKind.RelativeOrAbsolute));
-                 dwn.Source = new BitmapImage(new Uri(@"\images\down.gif", UriKind.RelativeOrAbsolute));
-                 dwn.BeginAnimation(null,null);
-                 return;
+                 
+                  dwn.Source = new BitmapImage(new Uri(@"\images\downloadhigh.png", UriKind.RelativeOrAbsolute));
+                  ImageBehavior.SetAnimatedSource(dwn, dwn.Source);
+                  return;
+               
              };
             dwn.MouseLeave += (s, e) =>
             {
-                dwn.Source = new BitmapImage(new Uri(@"\images\download.png", UriKind.RelativeOrAbsolute));
-                return;
+                  dwn.Source = new BitmapImage(new Uri(@"\images\download.png", UriKind.RelativeOrAbsolute));
+                  return;
+
+            };
+            dwn.MouseLeftButtonDown += (object sender, MouseButtonEventArgs e) =>
+            {
+                dwn.BeginInit();
+                dwn.Source = new BitmapImage(new Uri(@"\images\down.gif", UriKind.RelativeOrAbsolute));
+                ImageBehavior.SetAnimatedSource(dwn, dwn.Source);                
+                var controller = ImageBehavior.GetAnimationController(dwn);
+                controller.Play();
+                dwn.EndInit();
+         
+                downloadFile(completePath, date ,filename);
+
+               
+  
+
+
+
+
             };
 
             calendar.Children.Add(year);
@@ -854,10 +871,169 @@ namespace PDS_Client
                     else
                         Dispatcher.Invoke(updateFolders);
 
-                }
+                }         
                 
-
                 return; 
+            });
+        }
+
+
+        private void downloadFile(string path, string version,string filename)
+        {
+            NetworkHandler.getInstance().addFunction((Socket s) => {
+                // selecting operation
+                int ricevuti;
+                byte[] buffer = new byte[1024];
+                if (version == null)
+                {
+                    // downloading the last version
+                    s.Send(BitConverter.GetBytes((int)messages.DOWNLOAD_LAST_VERSION));
+                    s.Send(BitConverter.GetBytes(ASCIIEncoding.UTF8.GetByteCount(path)));
+
+                    Debug.WriteLine("path length = " + s.Send(Encoding.UTF8.GetBytes(path)));
+                    // check if it's ok
+
+                    ricevuti = s.Receive(buffer);
+                    buffer[ricevuti] = (byte)'\0';
+                    string msg = Encoding.ASCII.GetString(buffer);
+                    if (ricevuti != 2 || !msg.Contains("OK")) // there was an error
+                    {
+                        MessageBox.Show("Errore: Impossibile mandare il nome del file correttamente", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+                }
+                else
+                {
+                    // downloading a specific old version
+                    s.Send(BitConverter.GetBytes((int)messages.DOWNLOAD_PREVIOUS_VERSION));
+                    Debug.WriteLine("voglio scaricare la versione del {0} di {1}", version, path);
+                    // sending path
+                    s.Send(BitConverter.GetBytes(ASCIIEncoding.UTF8.GetByteCount(path)));
+                    s.Send(Encoding.UTF8.GetBytes(path));
+                    // check if it's ok
+
+                    ricevuti = s.Receive(buffer);
+                    buffer[ricevuti] = (byte)'\0';
+                    string msg = Encoding.ASCII.GetString(buffer);
+                    if (ricevuti != 2 || !msg.Contains("OK")) // there was an error
+                    {
+                        MessageBox.Show("Errore: Impossibile mandare il nome del file correttamente", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+
+                    // sending path
+                    s.Send(BitConverter.GetBytes(System.Text.ASCIIEncoding.UTF8.GetByteCount(version)));
+                    s.Send(Encoding.UTF8.GetBytes(version));
+                    // check if it's ok
+                    ricevuti = s.Receive(buffer);
+                    buffer[ricevuti] = (byte)'\0';
+                    msg = Encoding.ASCII.GetString(buffer);
+                    if (ricevuti != 2 || !msg.Contains("OK")) // there was an error
+                    {
+                        MessageBox.Show("Errore: Impossibile mandare la versione del file correttamente", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+                }
+
+
+
+
+                string[] path_arr = path.Split('\\');
+                string[] fileext = path_arr[path_arr.Length - 1].Split('.');
+                string tmp_path = "C:\\Temp\\" + fileext[0] + ".tmp"; // what if that file is already there? it is deleted by file create
+
+
+
+                // now i need to read the dimension of the file
+                ricevuti = s.Receive(buffer);
+                if (ricevuti != 4)
+                {
+                    MessageBox.Show("Errore: La dimensione del file è arrivata corrotta", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+                else
+                {
+                    Debug.WriteLine("La vecchia versione pesa {0}", BitConverter.ToInt32(buffer, 0));
+                }
+
+                int fDim = BitConverter.ToInt32(buffer, 0);
+                if (fDim <= 0)
+                {
+                    MessageBox.Show("Errore: La dimensione del file è negativa", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+                if (!Directory.Exists("C:\\Temp"))
+                    Directory.CreateDirectory("C:\\Temp");
+                FileStream stream = new FileStream(tmp_path, FileMode.Create);
+                while (fDim > 0)
+                {
+                    ricevuti = s.Receive(buffer);
+                    stream.Write(buffer, 0, ricevuti);
+                    fDim -= ricevuti;
+                }
+                stream.Close();
+
+
+                s.Send(Encoding.ASCII.GetBytes("OK"));
+
+                Debug.WriteLine("aspetto l'hash del server");
+                ricevuti = s.Receive(buffer); // this is server hash                
+                byte[] chash = getSha1(tmp_path);
+
+                buffer[ricevuti] = 0;
+                string str_chash = BitConverter.ToString(chash).Replace("-", "");
+                string str_shash = Encoding.ASCII.GetString(buffer, 0, 40).ToUpper();
+
+                if (!str_chash.Equals(str_shash))
+                {
+
+                    MessageBox.Show("Gli hash sono diversi", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                    s.Send(Encoding.ASCII.GetBytes("ERR"));
+                    File.Delete(tmp_path);
+                    return;
+                }
+                else
+                    s.Send(Encoding.ASCII.GetBytes("OK"));
+
+
+                s.Receive(buffer);
+                if (!Encoding.ASCII.GetString(buffer).Contains("OK"))
+                {
+                    MessageBox.Show("Impossibile aggiungere una nuova versione lato server", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+
+
+                fs.EnableRaisingEvents = false;
+                Debug.WriteLine("File.Delete( " + path + " );");
+                if (File.Exists(path)) File.Delete(path);
+                Debug.WriteLine("File.Move({0}, {1});", path + ".tmp", path);
+                File.Move(tmp_path, path);
+                fs.EnableRaisingEvents = true;
+
+                if (version == null)
+                {
+                    // here i need to refresh the interface!
+                    if (currentDirectory.Equals("trash"))
+                    {
+                        List<JSONDeletedFile> items = getDeletedFiles(s);
+                        Dispatcher.Invoke(() =>
+                        {
+                            insertFilesFromJSON(items, true);
+                        });
+                    }
+                    else
+                        Dispatcher.Invoke(updateFolders);
+
+                }
+                Dispatcher.Invoke(() =>
+                {
+                    ((StackPanel)this.FindName("panel_details")).Children.Clear();
+
+                });
+                drawVersionCalendar(filename);
+                return;
             });
         }
 
@@ -1026,12 +1202,76 @@ namespace PDS_Client
             
         }
 
+        private string getFileNamesender(StackPanel sender)
+        {
+           
+            ((UIElement)this.FindName("details_container")).Visibility = Visibility.Visible;
+            // i start here a thread in order to download the versions of this file
+            ((StackPanel)this.FindName("panel_details")).Children.Clear();
+            string filename = (string)((TextBlock)sender.Children[1]).Text;
+            this.selectedFile = currentDirectory + "\\" + filename;
+            return filename;
+
+        }
+
+        private void drawVersionCalendar(string filename)
+        {
+            
+            NetworkHandler.getInstance().addFunction((Socket socket) =>
+            {
+
+                Debug.WriteLine("Into downloader (versions) thread");
+                socket.Send(BitConverter.GetBytes(5)); // GET FILE VERSIONS
+
+                string pathToSend = currentDirectory + "\\" + filename;
+                socket.Send(BitConverter.GetBytes(ASCIIEncoding.UTF8.GetByteCount(pathToSend)));
+                socket.Send(Encoding.UTF8.GetBytes(pathToSend));
+                Debug.WriteLine("sent " + pathToSend);
+
+
+                byte[] dim = new byte[4]; // just the space for an int
+                if (socket.Receive(dim) != 4)
+                {
+                    Debug.WriteLine("did not receive a valid number");
+                    return;
+                }
+                if (BitConverter.ToInt32(dim, 0) <= 0)
+                {
+                    // an error server side has occurred!
+                    Debug.WriteLine("dim of versions < 0");
+                    return;
+                }
+                else
+                    Debug.WriteLine("dim = " + BitConverter.ToInt32(dim, 0));
+
+
+                byte[] buff = new byte[BitConverter.ToInt32(dim, 0) + 1];
+                socket.Receive(buff); // receive json
+
+                string versions = Encoding.UTF8.GetString(buff);
+
+                Debug.WriteLine(versions);
+
+                List<JSONVersion> items = JsonConvert.DeserializeObject<List<JSONVersion>>(versions);
+                BrushConverter bc = new BrushConverter();
+
+                foreach (JSONVersion v in items)
+                {
+                    Debug.WriteLine("v.date = " + v.date);
+                    Dispatcher.Invoke(() =>
+                    {
+                        ((Panel)FindName("panel_details")).Children.Add(getCalendar(v.date, bc, pathToSend,filename));
+                        //Debug.WriteLine("inserted the new line -> " + line.Text);
+                    });
+                }
+                return;
+            }
+          );
+
+        }
+
         private void MouseFileButtonDownHandler(object sender, RoutedEventArgs e) {
 
-            Debug.WriteLine("MouseFileButtonDownHandler called");
-
-            //  Grid.SetColumnSpan((UIElement)this.FindName("fs_grid"), 1);
-            
             Monitor.Enter(saveFlag);
             if (flag == false)
             {
@@ -1039,66 +1279,12 @@ namespace PDS_Client
                 return;
             }
             Monitor.Exit(saveFlag);
-            ((UIElement)this.FindName("details_container")).Visibility = Visibility.Visible;
-            // i start here a thread in order to download the versions of this file
-            ((StackPanel)this.FindName("panel_details")).Children.Clear();
-            string filename = (string)((TextBlock)((StackPanel)sender).Children[1]).Text;
-            this.selectedFile = currentDirectory + "\\" + filename;
 
-            NetworkHandler.getInstance().addFunction( (Socket socket) =>
-           {
+            Debug.WriteLine("MouseFileButtonDownHandler called");
 
-               Debug.WriteLine("Into downloader (versions) thread");
-               socket.Send(BitConverter.GetBytes(5)); // GET FILE VERSIONS
-
-               string pathToSend = currentDirectory + "\\" + filename;
-               socket.Send(BitConverter.GetBytes(ASCIIEncoding.UTF8.GetByteCount(pathToSend)));
-               socket.Send(Encoding.UTF8.GetBytes(pathToSend));
-               Debug.WriteLine("sent " + pathToSend);
-
-
-               byte[] dim = new byte[4]; // just the space for an int
-               if(socket.Receive(dim) != 4)
-               {
-                   Debug.WriteLine("did not receive a valid number");
-                   return;
-               }
-               if(BitConverter.ToInt32(dim, 0) <= 0)
-               {
-                   // an error server side has occurred!
-                   Debug.WriteLine("dim of versions < 0");
-                   return;
-               }
-               else
-                   Debug.WriteLine("dim = " + BitConverter.ToInt32(dim, 0));
-
-
-               byte[] buff = new byte[BitConverter.ToInt32(dim, 0)+1];
-               socket.Receive(buff); // receive json
-
-               string versions = Encoding.UTF8.GetString(buff);
-
-               Debug.WriteLine(versions);
-
-               List<JSONVersion> items = JsonConvert.DeserializeObject<List<JSONVersion>>(versions);
-               BrushConverter bc = new BrushConverter();
-               foreach (JSONVersion v in items)
-               {
-                   Debug.WriteLine("v.date = " + v.date);
-                   Dispatcher.Invoke(()=>
-                   {
-                       ((Panel)FindName("panel_details")).Children.Add(getCalendar(v.date, bc, pathToSend));
-                       //Debug.WriteLine("inserted the new line -> " + line.Text);
-                   });
-               }
-               return;
-           }
-            );
-            
-    
+            string filename= getFileNamesender(((StackPanel)sender));
+            drawVersionCalendar(filename);
             Storyboard sb = (Storyboard)((Grid)this.FindName("fs_container")).FindResource("key_details_animation");
-
-
             //rowElements = 7;
             ((StackPanel)this.FindName("fs_grid")).Children.Clear();
             addCurrentFoderInfo(currentDirectory);
