@@ -139,7 +139,7 @@
             <RowDefinition Height="81*"/>
             <RowDefinition Height="689*"/>
             <RowDefinition Height="26*"/>
-            
+
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="70*"/>
@@ -150,7 +150,7 @@
             <ColumnDefinition Width="5*"/>
             <ColumnDefinition Width="5*"/>
 
-            
+
 
         </Grid.ColumnDefinitions>
         <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="7" x:Name="background" MouseLeftButtonDown="closeVersions"  >
@@ -159,14 +159,14 @@
             </StackPanel.Background>
         </StackPanel>
         <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="7" x:Name="fs_grid"  MouseLeftButtonDown="closeVersions"  Margin="0,45,0,0" >
-        
+
         </StackPanel>
 
         <Rectangle x:Name="rect_header" Grid.Row="0" Grid.Column="0" Fill="#111221" Margin="0,0,0,1" Grid.ColumnSpan="7" MouseDown="mouse_MouseDown"/>
 
-        <DockPanel Visibility="Collapsed" Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="6" x:Name="details_container" Margin="0,0,0,0"    >
+        <DockPanel Visibility="Visible" Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="6" x:Name="details_container" Margin="0,0,0,0"    >
             <StackPanel Background="#FF1E1E27" Margin="0,-1,0,0" Orientation="Vertical" Visibility="Visible">
-                <TextBlock Text="VERSIONI" FontSize="24" Foreground="AliceBlue"  TextOptions.TextFormattingMode="Display" FontWeight="SemiBold" VerticalAlignment="Top" TextAlignment="Center" HorizontalAlignment="Left" Margin="100,20,0,20"/>
+                <TextBlock x:Name="version_text"  Text="VERSIONI" FontSize="24" Foreground="AliceBlue"  TextOptions.TextFormattingMode="Display" FontWeight="SemiBold" VerticalAlignment="Top" TextAlignment="Center" HorizontalAlignment="Left" Margin="0,20,0,20" Width="318"/>
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Height="631" Background="Transparent" >
                     <StackPanel x:Name="panel_details" Margin="0,0,0,0" Orientation="Vertical" Visibility="Visible">
 
@@ -182,6 +182,7 @@
         <ScrollViewer  PreviewMouseWheel="TS_PreviewMouseWheel" x:Name ="scrolladd"  HorizontalScrollBarVisibility="Hidden" Background="WhiteSmoke" VerticalScrollBarVisibility="Disabled"  Width="862" Grid.ColumnSpan="7" Margin="88,24,46.8,10">
             <StackPanel  Orientation="Horizontal"  HorizontalAlignment="Left"  Height="30" VerticalAlignment="Stretch"  Name="address" />
         </ScrollViewer>
+        <Label x:Name="user_label" VerticalContentAlignment="Top" HorizontalContentAlignment="Center"   Foreground="AliceBlue" FontSize="11" Background="Purple" Content="G" Grid.Column="6" HorizontalAlignment="Left" Width="30" Margin="11,33,0,18"/>
     </Grid>
 </Window>
     

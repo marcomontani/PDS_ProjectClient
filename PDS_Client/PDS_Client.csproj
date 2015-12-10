@@ -70,6 +70,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="DownloadManager.cs" />
+    <Compile Include="FindClickedHandler.cs" />
     <Compile Include="JSONDeletedFile.cs" />
     <Compile Include="JsonPaths.cs" />
     <Compile Include="JSONVersion.cs" />
@@ -177,6 +178,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="images\down.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="images\disable.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
