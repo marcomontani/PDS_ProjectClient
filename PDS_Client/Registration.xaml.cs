@@ -302,7 +302,7 @@ namespace PDS_Client
                     File.WriteAllBytes("./paths.settings", Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(pths)));
 
                     NetworkHandler.createInstance(username, password);
-                    MainWindow mw = new MainWindow();
+                    MainWindow mw = new MainWindow(username);
                     mw.setCurrentDirectory(path);
                     mw.Show();
                     mw.sync();

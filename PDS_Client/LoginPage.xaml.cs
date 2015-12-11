@@ -45,7 +45,7 @@ namespace PDS_Client
                         {
                             s.Close();
                             NetworkHandler.createInstance(credentials[0], credentials[1], credentials[2]);
-                            MainWindow main = new MainWindow();
+                            MainWindow main = new MainWindow(credentials[0]);
                             main.setCurrentDirectory(credentials[2]);
                             main.updateFolders();
                             main.Show();
@@ -165,7 +165,7 @@ namespace PDS_Client
 
 
             s.Close();
-            MainWindow main = new MainWindow();
+            MainWindow main = new MainWindow(username);
             NetworkHandler.createInstance(username, password, path);
             main.setCurrentDirectory(path);
             main.updateFolders();

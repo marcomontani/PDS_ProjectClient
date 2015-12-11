@@ -16,6 +16,8 @@ using System.Threading;
 using System.Drawing.Imaging;
 using System.Drawing;
 using WpfAnimatedGif;
+using System.Reflection;
+using System.ComponentModel;
 
 namespace PDS_Client
 {
@@ -72,11 +74,13 @@ namespace PDS_Client
         string selectedFile;
         FileSystemWatcher fs;
         System.Windows.Forms.NotifyIcon noty;
+        List<System.Windows.Controls.Image> images = new List<System.Windows.Controls.Image>();
+        List<StackPanel> calendars = new List<StackPanel>();
 
         bool canMoveSidebar;
 
 
-        public MainWindow()
+        public MainWindow(string user)
         {
             InitializeComponent();
             fs = null;
@@ -91,6 +95,12 @@ namespace PDS_Client
             System.Windows.Forms.ContextMenu menu = new System.Windows.Forms.ContextMenu();
             menu.MenuItems.Add("Apri");
             menu.MenuItems.Add("Esci");
+            ((Label)FindName("user_label")).Content =user[0];
+            ((Label)FindName("user_label")).ToolTip = user+"@poliHub";
+
+
+
+
             menu.MenuItems[0].Click += (s,e) =>
             {
                 this.Show();
@@ -420,7 +430,7 @@ namespace PDS_Client
             calendar.Width = 50;
             calendar.HorizontalAlignment = HorizontalAlignment.Left;
             calendar.Margin = new Thickness(20, 18, 0, 11);
-
+            calendars.Add(calendar);
 
             TextBlock year = new TextBlock();
             year.FontSize = 12;
@@ -477,39 +487,39 @@ namespace PDS_Client
 
             //  <Image Source="images/download.png"  Margin="45,10,0,0" Width="30"/>
             System.Windows.Controls.Image dwn = new System.Windows.Controls.Image();
-            
+            images.Add(dwn);
             dwn.Source = new BitmapImage(new Uri(@"\images\download.png", UriKind.RelativeOrAbsolute));
             dwn.Width = 50;
             dwn.Margin = new Thickness(45, 5, 0, 0);
-            dwn.MouseEnter  += (s, e) =>
-             {
-                 
-                  dwn.Source = new BitmapImage(new Uri(@"\images\downloadhigh.png", UriKind.RelativeOrAbsolute));
-                  ImageBehavior.SetAnimatedSource(dwn, dwn.Source);
-                  return;
-               
-             };
-            dwn.MouseLeave += (s, e) =>
-            {
-                  dwn.Source = new BitmapImage(new Uri(@"\images\download.png", UriKind.RelativeOrAbsolute));
-                  return;
 
-            };
+
+
+            dwn.MouseEnter += mousenter;
+            dwn.MouseLeave += mouseleave;
             dwn.MouseLeftButtonDown += (object sender, MouseButtonEventArgs e) =>
             {
+                //todo:aggiungi monitor;
+                foreach (System.Windows.Controls.Image a in images)
+                {
+                    a.Source = new BitmapImage(new Uri(@"\images\disable.png", UriKind.RelativeOrAbsolute));
+                    a.MouseLeave -= mouseleave;
+                    a.MouseEnter -= mousenter;
+
+                }
+                foreach(StackPanel c in calendars)
+                {
+                    c.Background = (System.Windows.Media.Brush)bc.ConvertFrom("#d3d3d3");                    
+                }
+                calendar.Background = (System.Windows.Media.Brush)bc.ConvertFrom("#D2691E");
                 dwn.BeginInit();
                 dwn.Source = new BitmapImage(new Uri(@"\images\down.gif", UriKind.RelativeOrAbsolute));
                 ImageBehavior.SetAnimatedSource(dwn, dwn.Source);                
                 var controller = ImageBehavior.GetAnimationController(dwn);
+         
                 controller.Play();
                 dwn.EndInit();
          
                 downloadFile(completePath, date ,filename);
-
-               
-  
-
-
 
 
             };
@@ -525,6 +535,31 @@ namespace PDS_Client
 
             return brd;
         }
+
+
+        private void mousenter(object sender, MouseEventArgs e)
+        {                 
+                  ((System.Windows.Controls.Image)sender).Source = new BitmapImage(new Uri(@"\images\downloadhigh.png", UriKind.RelativeOrAbsolute));
+                  ImageBehavior.SetAnimatedSource(((System.Windows.Controls.Image)sender), ((System.Windows.Controls.Image)sender).Source);
+            return;
+        }
+
+        private void mouseleave(object sender, MouseEventArgs e)
+        {
+
+            ((System.Windows.Controls.Image)sender).Source = new BitmapImage(new Uri(@"\images\download.png", UriKind.RelativeOrAbsolute));
+
+        }
+
+        private void mouseleft(object sender, MouseEventArgs e)
+        {
+
+            System.Windows.Controls.Image dwn = ((System.Windows.Controls.Image)sender);
+
+        }
+
+
+
 
         private void addCurrentFoderInfo(string path)
         {
@@ -1255,10 +1290,12 @@ namespace PDS_Client
 
                 List<JSONVersion> items = JsonConvert.DeserializeObject<List<JSONVersion>>(versions);
                 BrushConverter bc = new BrushConverter();
-
+                images.Clear();
+                calendars.Clear();
                 foreach (JSONVersion v in items)
                 {
                     Debug.WriteLine("v.date = " + v.date);
+                   
                     Dispatcher.Invoke(() =>
                     {
                         ((Panel)FindName("panel_details")).Children.Add(getCalendar(v.date, bc, pathToSend,filename));
@@ -1279,7 +1316,8 @@ namespace PDS_Client
                 Monitor.Exit(saveFlag);
                 return;
             }
-            Monitor.Exit(saveFlag);
+
+            Monitor.Exit(saveFlag);       
 
             Debug.WriteLine("MouseFileButtonDownHandler called");
 
@@ -1288,6 +1326,7 @@ namespace PDS_Client
             Storyboard sb = (Storyboard)((Grid)this.FindName("fs_container")).FindResource("key_details_animation");
             //rowElements = 7;
             ((StackPanel)this.FindName("fs_grid")).Children.Clear();
+            ((TextBlock)this.FindName("version_text")).Text = filename;
             addCurrentFoderInfo(currentDirectory);
            
             setFlag(false);
