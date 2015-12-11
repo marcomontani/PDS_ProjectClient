@@ -20,7 +20,6 @@ namespace PDS_Client
     /// </summary>
     public partial class Window1 : Window
     {
-
         Socket s = null;
 
         public Window1()

@@ -73,6 +73,7 @@ namespace PDS_Client
         FileSystemWatcher fs;
         System.Windows.Forms.NotifyIcon noty;
 
+        bool canMoveSidebar;
 
 
         public MainWindow()
@@ -126,7 +127,7 @@ namespace PDS_Client
                
 
             };
-            
+            canMoveSidebar = true;
             // <Label x:Name="label" Background="#2C4566" Foreground="AliceBlue" Content="C:\\" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="2,2,0,0"/>
 
 
@@ -714,7 +715,7 @@ namespace PDS_Client
                 socket.Receive(inBuff);
                 if (!Encoding.ASCII.GetString(inBuff).Contains("OK")) throw new Exception("error: file not uploaded correctly");
 
-                // todo: calculate and send sha1 checksum
+                
                 
                 socket.Send(getSha1(path));
                 socket.Receive(inBuff);
@@ -1379,6 +1380,14 @@ namespace PDS_Client
 
         private void closeSidebar(object sender, EventArgs e)
         {
+            Monitor.Enter(this);
+            if (!canMoveSidebar)
+            {
+                Monitor.Exit(this);
+                return;
+            }
+            else Monitor.Exit(this);
+
             ((UIElement)this.FindName("details_container")).Visibility = Visibility.Collapsed;
             //Grid.SetColumnSpan((UIElement)this.FindName("fs_grid"), 7);
             // rowElements = 10;
