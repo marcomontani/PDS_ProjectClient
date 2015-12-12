@@ -13,7 +13,7 @@ namespace PDS_Client
         public Window2()
         {
             InitializeComponent();
-
+            this.ResizeMode = ResizeMode.NoResize;
         }
 
         public  DialogResult Show_D(string filename)

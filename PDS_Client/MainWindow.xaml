@@ -104,6 +104,49 @@
           ClipToBounds="True">
 
         <Grid.Resources>
+
+
+            <Storyboard x:Name="flymove" x:Key="flymove2" RepeatBehavior="Forever">
+                <ObjectAnimationUsingKeyFrames 
+                    Duration="0:0:0.6"
+                        Storyboard.TargetName="fly"
+                        Storyboard.TargetProperty="(Image.Source)">
+
+                    <DiscreteObjectKeyFrame KeyTime="0:0:0.1">
+                        <DiscreteObjectKeyFrame.Value>
+                            <BitmapImage UriSource="images/1.png"/>
+                        </DiscreteObjectKeyFrame.Value>
+                    </DiscreteObjectKeyFrame>
+
+                    <DiscreteObjectKeyFrame KeyTime="0:0:0.2">
+                        <DiscreteObjectKeyFrame.Value>
+                            <BitmapImage UriSource="images/2.png"/>
+                        </DiscreteObjectKeyFrame.Value>
+                    </DiscreteObjectKeyFrame>
+
+                    <DiscreteObjectKeyFrame KeyTime="0:0:0.3">
+                        <DiscreteObjectKeyFrame.Value>
+                            <BitmapImage UriSource="images/3.png"/>
+                        </DiscreteObjectKeyFrame.Value>
+                    </DiscreteObjectKeyFrame>
+
+                    <DiscreteObjectKeyFrame KeyTime="0:0:0.4">
+                        <DiscreteObjectKeyFrame.Value>
+                            <BitmapImage UriSource="images/4.png"/>
+                        </DiscreteObjectKeyFrame.Value>
+                    </DiscreteObjectKeyFrame>
+
+                    <DiscreteObjectKeyFrame KeyTime="0:0:0.5">
+                        <DiscreteObjectKeyFrame.Value>
+                            <BitmapImage UriSource="images/5.png"/>
+                        </DiscreteObjectKeyFrame.Value>
+                    </DiscreteObjectKeyFrame>
+
+
+                </ObjectAnimationUsingKeyFrames>
+            </Storyboard>
+
+
             <Storyboard x:Name="openDetails"
                         x:Key="key_details_animation">
                 <ThicknessAnimationUsingKeyFrames Storyboard.TargetName="details_container" Storyboard.TargetProperty="Margin" BeginTime="00:00:00">
@@ -153,12 +196,14 @@
 
 
         </Grid.ColumnDefinitions>
+
         <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="7" x:Name="background" MouseLeftButtonDown="closeVersions"  >
             <StackPanel.Background>
                 <ImageBrush ImageSource="images/pixelart.png" Stretch="Uniform"  AlignmentY="Bottom" AlignmentX="Right" />
             </StackPanel.Background>
         </StackPanel>
         <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="7" x:Name="fs_grid"  MouseLeftButtonDown="closeVersions"  Margin="0,45,0,0" >
+
 
         </StackPanel>
 
@@ -176,13 +221,16 @@
             </StackPanel>
         </DockPanel>
         <Rectangle x:Name="rect_header_Copy1" Grid.Row="2" Grid.Column="0" Fill="#111221" Grid.ColumnSpan="7" MouseDown="mouse_MouseDown" Margin="-2,0,-2,-2"/>
-        <Label Foreground="AliceBlue" Content="© PoliHub 2014 - 2015" Grid.Row="2" Grid.ColumnSpan="3" Margin="4,2,46,2" FontSize="10.667" FontWeight="SemiBold" />
+        <Label Foreground="AliceBlue" Content="© PoliHub 2014 - 2015" Grid.Row="2" Margin="4,2,513,2" FontSize="10.667" FontWeight="SemiBold" />
+        <Image x:Name="downimage" HorizontalAlignment="Left" Height="24" Margin="30,4,0,-2" VerticalAlignment="Top" Width="26" Source="images/thunder.png" Grid.Row="2" Grid.Column="4" Grid.ColumnSpan="2"/>
         <Image x:Name="image" HorizontalAlignment="Left" Height="66" Margin="12,5,0,0" VerticalAlignment="Top" Width="66" Source="images/polihub2.png"/>
+        <Image x:Name="fly" HorizontalAlignment="Left"  Visibility="Visible" Width="30" Margin="413,602,0,0" VerticalAlignment="Top" Source="images/1.png" Panel.ZIndex="2" Grid.Row="1" RenderTransformOrigin="0.467,3.902"/>
         <Button x:Name="btn_x" Content="X" Grid.Column="6" HorizontalAlignment="Left" Margin="19,1,0,0" VerticalAlignment="Top" Width="28" Height="27" Background="#111221" Foreground="WhiteSmoke" BorderThickness="0" Click="mouse_x_click"/>
         <ScrollViewer  PreviewMouseWheel="TS_PreviewMouseWheel" x:Name ="scrolladd"  HorizontalScrollBarVisibility="Hidden" Background="WhiteSmoke" VerticalScrollBarVisibility="Disabled"  Width="862" Grid.ColumnSpan="7" Margin="88,24,46.8,10">
-            <StackPanel  Orientation="Horizontal"  HorizontalAlignment="Left"  Height="30" VerticalAlignment="Stretch"  Name="address" />
+            <StackPanel  Orientation="Horizontal"  HorizontalAlignment="Left"  Height="35" VerticalAlignment="Stretch"  Name="address" />
         </ScrollViewer>
         <Label x:Name="user_label" VerticalContentAlignment="Top" HorizontalContentAlignment="Center"   Foreground="AliceBlue" FontSize="11" Background="Purple" Content="G" Grid.Column="6" HorizontalAlignment="Left" Width="30" Margin="11,33,0,18"/>
+        <Label x:Name="donwstring" Foreground="AliceBlue" Content="DOWNLOADING" Grid.Row="1" Margin="1,688,-99,5" FontSize="10.667" FontWeight="SemiBold" Grid.ColumnSpan="2" Grid.Column="5" Grid.RowSpan="2" />
     </Grid>
 </Window>
     

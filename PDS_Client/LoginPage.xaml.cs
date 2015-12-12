@@ -146,7 +146,7 @@ namespace PDS_Client
                         if(Directory.GetDirectories(path).Length != 0 || Directory.GetFiles(path).Length != 0)
                         {
                             path = null;
-                            MessageBox.Show("Errore : la cartella seleziona è vuota.", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+                            MessageBox.Show("Errore : la cartella seleziona non è vuota.", "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
                             s.Close();
                             s = null;
                             return;

@@ -104,6 +104,10 @@ namespace PDS_Client
                                 // maybe send an exit here, jst to be sure?
                                 // disconnect the socket
                             }
+                            catch (Exception)
+                            {
+                                s = null;
+                            }
                         }
                         Monitor.Enter(d_semaphore);
                         value = die;
