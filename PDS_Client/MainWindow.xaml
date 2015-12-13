@@ -139,6 +139,37 @@
             </Storyboard>
 
 
+            <Storyboard x:Name="flyfly" x:Key="flyfly" RepeatBehavior="Forever">
+                <ObjectAnimationUsingKeyFrames 
+    					Duration="0:0:0.05"
+    					Storyboard.TargetName="fly"
+    					Storyboard.TargetProperty="(Image.Source)">
+                    <DiscreteObjectKeyFrame KeyTime="0:0:0.01">
+                        <DiscreteObjectKeyFrame.Value>
+                            <BitmapImage UriSource="images/6.png"/>
+                        </DiscreteObjectKeyFrame.Value>
+                    </DiscreteObjectKeyFrame>
+                    <DiscreteObjectKeyFrame KeyTime="0:0:0.02">
+                        <DiscreteObjectKeyFrame.Value>
+                            <BitmapImage UriSource="images/7.png"/>
+                        </DiscreteObjectKeyFrame.Value>
+                    </DiscreteObjectKeyFrame>
+                    <DiscreteObjectKeyFrame KeyTime="0:0:0.03">
+                        <DiscreteObjectKeyFrame.Value>
+                            <BitmapImage UriSource="images/8.png"/>
+                        </DiscreteObjectKeyFrame.Value>
+                    </DiscreteObjectKeyFrame>
+                    <DiscreteObjectKeyFrame KeyTime="0:0:0.04">
+                        <DiscreteObjectKeyFrame.Value>
+                            <BitmapImage UriSource="images/9.png"/>
+                        </DiscreteObjectKeyFrame.Value>
+                    </DiscreteObjectKeyFrame>
+                </ObjectAnimationUsingKeyFrames>
+            </Storyboard>
+
+
+
+
 
 
             <Storyboard x:Name="openDetails"
@@ -220,7 +251,7 @@
         </ScrollViewer>
         <Label x:Name="user_label" VerticalContentAlignment="Top" HorizontalContentAlignment="Center"   Foreground="AliceBlue" FontSize="11" Background="Purple" Content="G" Grid.Column="6" HorizontalAlignment="Left" Width="30" Margin="11,33,0,18"/>
         <Label x:Name="donwstring" Foreground="AliceBlue" Content="DOWNLOADING" Grid.Row="1" Margin="1,688,-99,5" FontSize="10.667" FontWeight="SemiBold" Grid.ColumnSpan="2" Grid.Column="5" Grid.RowSpan="2" />
-        <Image x:Name="fly" RenderTransformOrigin=".5,.5" HorizontalAlignment="Left" Height="45" Margin="449,448,0,0" VerticalAlignment="Top" Width="569" Source="images/1.png" Grid.Row="1" Grid.ColumnSpan="7" />
+        <Image x:Name="fly" RenderTransformOrigin=".5,.5" HorizontalAlignment="Left" Height="45" Margin="449,448,0,0" VerticalAlignment="Top" Width="569" Source="images/1.png" Grid.Row="1" Grid.RowSpan="3" Grid.ColumnSpan="7" />
 
     </Grid>
 

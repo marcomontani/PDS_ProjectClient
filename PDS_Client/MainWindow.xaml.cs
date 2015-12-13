@@ -142,13 +142,48 @@ namespace PDS_Client
 
 
             System.Windows.Controls.Image fly = (System.Windows.Controls.Image)((Grid)this.FindName("fs_container")).FindName("fly");
-            fly.Visibility = Visibility.Visible;           
+            fly.Visibility = Visibility.Visible;
             Storyboard sb = (Storyboard)((Grid)this.FindName("fs_container")).FindResource("flymove2");
             sb.Begin();
             System.Windows.Threading.DispatcherTimer timer = new System.Windows.Threading.DispatcherTimer();
             timer.Tick += new EventHandler(move);
-            timer.Interval = new TimeSpan(0, 0, 0, 0,25);
+            timer.Interval = new TimeSpan(0, 0, 0, 0, 25);
             timer.Start();
+
+            fly.MouseLeftButtonDown += (s, e) =>
+            {
+                Storyboard sb2 = (Storyboard)((Grid)this.FindName("fs_container")).FindResource("flyfly");
+                Storyboard sb1 = (Storyboard)((Grid)this.FindName("fs_container")).FindResource("flymove2");
+                sb1.Stop();
+                timer.Stop();
+                counterFly = 300;
+                fly.RenderTransform = new RotateTransform(0, 0.5, 0.5);
+                sb2.Begin();             
+                System.Windows.Threading.DispatcherTimer timer2 = new System.Windows.Threading.DispatcherTimer();
+                timer2.Tick += new EventHandler((st, et) => {
+                    if(counterFly!=0)
+                    {
+                        ((Label)this.FindName("donwstring")).Content = "" + marginFly + "" + counterFly;
+                        counterFly--;
+                        fly.Margin = new Thickness(fly.Margin.Left -15 , fly.Margin.Top - 15, fly.Margin.Right, fly.Margin.Bottom);
+                    }
+                    else
+                    {
+                        timer2.Stop();
+                        sb2.Stop();
+                        fly.Margin = new Thickness(449, 448, 0, 0);
+
+                    }
+
+                });
+                timer2.Interval = new TimeSpan(0, 0, 0, 0, 1);
+                timer2.Start();
+
+
+            };
+                
+          
+           
         }
 
         void move(object sender, EventArgs e)
