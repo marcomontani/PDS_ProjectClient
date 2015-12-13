@@ -62,7 +62,7 @@ namespace PDS_Client
     {
         Queue<queueObject> eventsArray = new Queue<queueObject>();
         Mutex events_semaphore;
-
+        List<MouseButtonEventHandler> restoreHandlers;
         int rowElements;
         string currentDirectory;
         string root;
@@ -77,15 +77,19 @@ namespace PDS_Client
         List<System.Windows.Controls.Image> images = new List<System.Windows.Controls.Image>();
         List<StackPanel> calendars = new List<StackPanel>();
         Mutex singleDownload = new Mutex();
+        int counterFly = 0;
+        int marginFly = 1;
+        double angleFly = 0.0;
+        bool rotateFly = false;
 
-        bool canMoveSidebar;
+        bool canMoveSidebar=true;
 
 
         public MainWindow(string user)
         {
             InitializeComponent();
             fs = null;
-
+            restoreHandlers = new List<MouseButtonEventHandler>();
             noty = new System.Windows.Forms.NotifyIcon();
             noty.Icon = new System.Drawing.Icon(@"images\\ico.ico");
             noty.DoubleClick += (s,e) =>
@@ -98,8 +102,6 @@ namespace PDS_Client
             menu.MenuItems.Add("Esci");
             ((Label)FindName("user_label")).Content =user[0];
             ((Label)FindName("user_label")).ToolTip = user+"@poliHub";
-
-
 
 
             menu.MenuItems[0].Click += (s,e) =>
@@ -138,47 +140,72 @@ namespace PDS_Client
                
             };
 
-            List<Uri> frames = new List<Uri>();
-            frames.Add(new Uri(@"\images\1.png", UriKind.RelativeOrAbsolute));
-            frames.Add(new Uri(@"\images\2.png", UriKind.RelativeOrAbsolute));
-            frames.Add(new Uri(@"\images\3.png", UriKind.RelativeOrAbsolute));
-            frames.Add(new Uri(@"\images\4.png", UriKind.RelativeOrAbsolute));
-            frames.Add(new Uri(@"\images\5.png", UriKind.RelativeOrAbsolute));
 
             System.Windows.Controls.Image fly = (System.Windows.Controls.Image)((Grid)this.FindName("fs_container")).FindName("fly");
-            fly.Visibility = Visibility.Visible;
-            int i = 2;
+            fly.Visibility = Visibility.Visible;           
             Storyboard sb = (Storyboard)((Grid)this.FindName("fs_container")).FindResource("flymove2");
-            bool flag = true;
-            MoveTo(fly, 0, -150,sb,flag);
-            
-
-
-
-
-
-
-
-            // <Label x:Name="label" Background="#2C4566" Foreground="AliceBlue" Content="C:\\" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="2,2,0,0"/>
-
-
-        }
-
-        public static void MoveTo(System.Windows.Controls.Image target, double newX, double newY, Storyboard sb, bool f)
-        {
-
             sb.Begin();
-            Vector offset = VisualTreeHelper.GetOffset(target);
-            var top = offset.Y;
-            var left = offset.X;
-            TranslateTransform trans = new TranslateTransform();
-            target.RenderTransform = trans;
-            DoubleAnimation anim1 = new DoubleAnimation(0, newY - top, TimeSpan.FromSeconds(10));
-            DoubleAnimation anim2 = new DoubleAnimation(0, newX - left, TimeSpan.FromSeconds(10));
-            trans.BeginAnimation(TranslateTransform.YProperty, anim1);
-            trans.BeginAnimation(TranslateTransform.XProperty, anim2);
-
+            System.Windows.Threading.DispatcherTimer timer = new System.Windows.Threading.DispatcherTimer();
+            timer.Tick += new EventHandler(move);
+            timer.Interval = new TimeSpan(0, 0, 0, 0,25);
+            timer.Start();
         }
+
+        void move(object sender, EventArgs e)
+        { //Margin="508,315,170,0"
+            System.Windows.Controls.Image fly = (System.Windows.Controls.Image)((Grid)this.FindName("fs_container")).FindName("fly");
+
+            if (counterFly<32)
+            {
+                ((Label)this.FindName("donwstring")).Content = ""+ marginFly + "" + counterFly;
+                counterFly++;
+                Storyboard sb = (Storyboard)((Grid)this.FindName("fs_container")).FindResource("flymove2");
+                sb.Resume();
+
+                if (marginFly >= 5 )
+                {
+                    counterFly += 2;
+                    sb.Pause();
+                    fly.Margin = new Thickness(fly.Margin.Left, fly.Margin.Top, fly.Margin.Right, fly.Margin.Bottom);
+                }
+      
+                //fly.RenderTransform = new RotateTransform(0);
+                if (marginFly == 1)
+                {
+                    fly.RenderTransform = new RotateTransform(0,0.5,0.5);
+                    fly.Margin = new Thickness(fly.Margin.Left, fly.Margin.Top - 2, fly.Margin.Right, fly.Margin.Bottom);
+                }
+                if (marginFly == 2)
+                {
+                    fly.RenderTransform = new RotateTransform(-90,0.5,0.5);
+                    fly.Margin = new Thickness(fly.Margin.Left - 2, fly.Margin.Top, fly.Margin.Right, fly.Margin.Bottom);
+                }
+                if (marginFly == 3)
+                {
+                    fly.RenderTransform = new RotateTransform(+90,0.5,0.5);
+                    fly.Margin = new Thickness(fly.Margin.Left+2, fly.Margin.Top, fly.Margin.Right, fly.Margin.Bottom);
+                }
+                if (marginFly == 4)
+                {
+                    fly.RenderTransform = new RotateTransform(180,0.5,0.5);
+                    fly.Margin = new Thickness(fly.Margin.Left, fly.Margin.Top+2, fly.Margin.Right, fly.Margin.Bottom);
+                }
+
+
+            }
+            else
+            {
+                
+                counterFly = 0;
+                Random rnd = new Random();
+                marginFly = rnd.Next(1, 12); 
+              
+
+            }
+
+            }
+  
+
 
         /*
             FUNCTIONS THAT MODIFY GRAPHICAL INTERFACE
@@ -529,34 +556,35 @@ namespace PDS_Client
             dwn.Width = 50;
             dwn.Margin = new Thickness(45, 5, 0, 0);
 
-
-
             dwn.MouseEnter += mousenter;
             dwn.MouseLeave += mouseleave;
-            dwn.MouseLeftButtonDown += (object sender, MouseButtonEventArgs e) =>
-            {
-                if (!Monitor.TryEnter(singleDownload)) return;
+            
+            MouseButtonEventHandler del = null;
+            del = (object sender, MouseButtonEventArgs e) => {
                 try {
-                foreach (System.Windows.Controls.Image a in images)
-                {
-                    a.Source = new BitmapImage(new Uri(@"\images\disable.png", UriKind.RelativeOrAbsolute));
-                    a.MouseLeave -= mouseleave;
-                    a.MouseEnter -= mousenter;
-
-                }
+                    foreach (System.Windows.Controls.Image a in images)
+                    {
+                        a.Source = new BitmapImage(new Uri(@"\images\disable.png", UriKind.RelativeOrAbsolute));
+                        foreach(MouseButtonEventHandler m in restoreHandlers)
+                            a.MouseLeftButtonDown -= m;
+                        a.MouseLeave -= mouseleave;                                              
+                        a.MouseEnter -= mousenter;                   
+                    }
                     foreach (StackPanel c in calendars)
-                {
-                    c.Background = (System.Windows.Media.Brush)bc.ConvertFrom("#d3d3d3");                    
-                }
-                calendar.Background = (System.Windows.Media.Brush)bc.ConvertFrom("#D2691E");
-                dwn.BeginInit();
-                dwn.Source = new BitmapImage(new Uri(@"\images\down.gif", UriKind.RelativeOrAbsolute));
-                ImageBehavior.SetAnimatedSource(dwn, dwn.Source);                
-                var controller = ImageBehavior.GetAnimationController(dwn);
+                    {
+                        c.Background = (System.Windows.Media.Brush)bc.ConvertFrom("#d3d3d3");                    
+                    }
+                    calendar.Background = (System.Windows.Media.Brush)bc.ConvertFrom("#D2691E");
+                    dwn.BeginInit();
+                    dwn.Source = new BitmapImage(new Uri(@"\images\down.gif", UriKind.RelativeOrAbsolute));
+                    ImageBehavior.SetAnimatedSource((System.Windows.Controls.Image)sender, ((System.Windows.Controls.Image)sender).Source);                
+                    var controller = ImageBehavior.GetAnimationController(dwn);
          
-                controller.Play();
-                dwn.EndInit();
-                    //TO-DO : bloccare il panel
+                    controller.Play();
+                    dwn.EndInit();
+                    Monitor.Enter(this);
+                    canMoveSidebar = false;
+                    Monitor.Exit(this);
          
                 }catch
                 {
@@ -566,6 +594,10 @@ namespace PDS_Client
                 downloadFile(completePath, date, filename);
 
             };
+
+            restoreHandlers.Add(del);
+
+            dwn.MouseLeftButtonDown +=del;
 
             calendar.Children.Add(year);
             calendar.Children.Add(day);
@@ -1112,12 +1144,17 @@ namespace PDS_Client
                     ((StackPanel)this.FindName("panel_details")).Children.Clear();
 
                 });
-                drawVersionCalendar(filename);
-                return;
+                    Monitor.Enter(this);
+                    canMoveSidebar = true;
+                    Monitor.Exit(this);
+                    
+                    drawVersionCalendar(filename);
+                
+             
                 }
                 finally
                 {
-                    Monitor.Exit(singleDownload);
+                  
                 }
             });
         }
@@ -1301,7 +1338,8 @@ namespace PDS_Client
 
         private void drawVersionCalendar(string filename)
         {
-            
+            restoreHandlers.Clear();
+
             NetworkHandler.getInstance().addFunction((Socket socket) =>
             {
 
@@ -1359,14 +1397,23 @@ namespace PDS_Client
 
         private void MouseFileButtonDownHandler(object sender, RoutedEventArgs e) {
 
+            Monitor.Enter(this);
+            if (!canMoveSidebar)
+            {
+                Monitor.Exit(this);
+                return;
+            }
+            else Monitor.Exit(this);
+
             Monitor.Enter(saveFlag);
             if (flag == false)
             {
                 Monitor.Exit(saveFlag);
                 return;
             }
-
-            Monitor.Exit(saveFlag);       
+            Monitor.Exit(saveFlag);
+            
+                   
 
             Debug.WriteLine("MouseFileButtonDownHandler called");
 
@@ -1451,6 +1498,14 @@ namespace PDS_Client
 
         private void closeVersions(object sender, MouseButtonEventArgs e)
         {
+            Monitor.Enter(this);
+            if (!canMoveSidebar)
+            {
+                Monitor.Exit(this);
+                return;
+            }
+            else Monitor.Exit(this);
+
             Monitor.Enter(saveFlag);
             if (flag == false)
             {
@@ -1469,13 +1524,7 @@ namespace PDS_Client
 
         private void closeSidebar(object sender, EventArgs e)
         {
-            Monitor.Enter(this);
-            if (!canMoveSidebar)
-            {
-                Monitor.Exit(this);
-                return;
-            }
-            else Monitor.Exit(this);
+           
 
             ((UIElement)this.FindName("details_container")).Visibility = Visibility.Collapsed;
             //Grid.SetColumnSpan((UIElement)this.FindName("fs_grid"), 7);
