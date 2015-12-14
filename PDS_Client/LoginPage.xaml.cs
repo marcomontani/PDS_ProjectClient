@@ -182,6 +182,7 @@ namespace PDS_Client
 
         private void btn_x_Click_1(object sender, RoutedEventArgs e)
         {
+            Environment.Exit(0);
             this.Close();
         }
 
