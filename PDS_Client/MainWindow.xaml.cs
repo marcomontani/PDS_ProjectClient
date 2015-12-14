@@ -79,9 +79,11 @@ namespace PDS_Client
         Mutex singleDownload = new Mutex();
         int counterFly = 0;
         int marginFly = 1;
-        double angleFly = 0.0;
-        bool rotateFly = false;
-
+        // double angleFly = 0.0;
+        // bool rotateFly = false;
+        System.Windows.Threading.DispatcherTimer lighttimer = new System.Windows.Threading.DispatcherTimer();
+        System.Windows.Threading.DispatcherTimer timerfly = new System.Windows.Threading.DispatcherTimer();
+        System.Windows.Threading.DispatcherTimer timer = new System.Windows.Threading.DispatcherTimer();
         bool canMoveSidebar=true;
 
 
@@ -102,7 +104,7 @@ namespace PDS_Client
             menu.MenuItems.Add("Esci");
             ((Label)FindName("user_label")).Content =user[0];
             ((Label)FindName("user_label")).ToolTip = user+"@poliHub";
-
+      
 
             menu.MenuItems[0].Click += (s,e) =>
             {
@@ -140,59 +142,78 @@ namespace PDS_Client
                
             };
 
+            lighttimer.Tick += lighting;
+            lighttimer.Interval += new TimeSpan(0, 0, 0,0,70);
+            this.MouseMove += mousemove;
+            timerfly.Tick += new EventHandler(setFly);
+            timerfly.Interval = new TimeSpan(0, 0, 0, 10);
+            timer.Interval = new TimeSpan(0, 0, 0, 0, 25);
+            timer.Tick += new EventHandler(move);
+            timerfly.Start();
+            
+
+        }
+
+  
+
+        void setFly(object sender, EventArgs ev)
+        {
 
             System.Windows.Controls.Image fly = (System.Windows.Controls.Image)((Grid)this.FindName("fs_container")).FindName("fly");
+            if (fly.Visibility == Visibility.Visible) return;
             fly.Visibility = Visibility.Visible;
+            fly.Margin = new Thickness(449, 448, 0, 0);
+
             Storyboard sb = (Storyboard)((Grid)this.FindName("fs_container")).FindResource("flymove2");
             sb.Begin();
-            System.Windows.Threading.DispatcherTimer timer = new System.Windows.Threading.DispatcherTimer();
-            timer.Tick += new EventHandler(move);
-            timer.Interval = new TimeSpan(0, 0, 0, 0, 25);
-            timer.Start();
+               timer.Start();
 
-            fly.MouseLeftButtonDown += (s, e) =>
+            fly.MouseLeftButtonDown += mousemove;
+
+        }
+
+        void mousemove (object sender, EventArgs e) 
             {
                 Storyboard sb2 = (Storyboard)((Grid)this.FindName("fs_container")).FindResource("flyfly");
                 Storyboard sb1 = (Storyboard)((Grid)this.FindName("fs_container")).FindResource("flymove2");
                 sb1.Stop();
                 timer.Stop();
+                timerfly.Stop();
+                timerfly.Start();
+            if (fly.Visibility == Visibility.Hidden) return;
                 counterFly = 300;
                 fly.RenderTransform = new RotateTransform(0, 0.5, 0.5);
-                sb2.Begin();             
+                sb2.Begin();
                 System.Windows.Threading.DispatcherTimer timer2 = new System.Windows.Threading.DispatcherTimer();
                 timer2.Tick += new EventHandler((st, et) => {
-                    if(counterFly!=0)
-                    {
-                        ((Label)this.FindName("donwstring")).Content = "" + marginFly + "" + counterFly;
-                        counterFly--;
-                        fly.Margin = new Thickness(fly.Margin.Left -15 , fly.Margin.Top - 15, fly.Margin.Right, fly.Margin.Bottom);
-                    }
-                    else
-                    {
-                        timer2.Stop();
-                        sb2.Stop();
-                        fly.Margin = new Thickness(449, 448, 0, 0);
+                if (counterFly != 0)
+                {
+                    //((Label)this.FindName("donwstring")).Content = "" + marginFly + "" + counterFly;
+                    counterFly--;
+                    fly.Margin = new Thickness(fly.Margin.Left - 15, fly.Margin.Top - 15, fly.Margin.Right, fly.Margin.Bottom);
+                 }
+                else
+                {
+                    timer2.Stop();
+                    sb2.Stop();
+                    fly.Margin = new Thickness(449, 448, 0, 0);
+                    fly.Visibility = Visibility.Hidden;
 
-                    }
-
+                }
                 });
-                timer2.Interval = new TimeSpan(0, 0, 0, 0, 1);
+                timer2.Interval = new TimeSpan(0, 0, 0, 0, 5);
                 timer2.Start();
 
 
-            };
-                
-          
-           
-        }
+            }
 
         void move(object sender, EventArgs e)
         { //Margin="508,315,170,0"
             System.Windows.Controls.Image fly = (System.Windows.Controls.Image)((Grid)this.FindName("fs_container")).FindName("fly");
-
+            
             if (counterFly<32)
             {
-                ((Label)this.FindName("donwstring")).Content = ""+ marginFly + "" + counterFly;
+             //   ((Label)this.FindName("donwstring")).Content = ""+ marginFly + "" + counterFly;
                 counterFly++;
                 Storyboard sb = (Storyboard)((Grid)this.FindName("fs_container")).FindResource("flymove2");
                 sb.Resume();
@@ -840,6 +861,9 @@ namespace PDS_Client
 
         private void sendFileToServer(string path)
         {
+
+            downloadFeedback(true,"UPLOADING");
+
             NetworkHandler.getInstance().addFunction ( (Socket socket) => {
                 socket.Send(BitConverter.GetBytes((int)messages.UPLOAD_FILE)); // UPLOAD FILE
                 socket.Send(Encoding.UTF8.GetBytes(path));
@@ -860,8 +884,8 @@ namespace PDS_Client
                 socket.Receive(inBuff);
                 if (!Encoding.ASCII.GetString(inBuff).Contains("OK")) throw new Exception("error: file not uploaded correctly");
 
-                
-                
+
+                downloadFeedback(false, "UPLOAD");
                 socket.Send(getSha1(path));
                 socket.Receive(inBuff);
                 if (!Encoding.ASCII.GetString(inBuff).Contains("OK")) MessageBox.Show("sha non accettato");
@@ -871,7 +895,7 @@ namespace PDS_Client
 
         private void downloadFile(string path, string version)
         {
-
+            downloadFeedback(true);
             NetworkHandler.getInstance().addFunction((Socket s) => {
                 // selecting operation
                 int ricevuti;
@@ -995,7 +1019,7 @@ namespace PDS_Client
                 }
 
 
-
+                downloadFeedback(false);
                 fs.EnableRaisingEvents = false;
                 Debug.WriteLine("File.Delete( " + path + " );");
                 if(File.Exists(path)) File.Delete(path);
@@ -1016,16 +1040,58 @@ namespace PDS_Client
                     }
                     else
                         Dispatcher.Invoke(updateFolders);
-
-                }         
-                
+                  
+                }
+       
                 return; 
             });
         }
 
 
+
+        public void downloadFeedback(bool on, String action = "DOWNLOADING")
+        {
+            Dispatcher.Invoke(() =>
+            {
+                ((Label)this.FindName("donwstring")).Content = action;
+                if (on)
+                {
+                    lighttimer.Start();
+
+                }
+                else
+                {
+                    lighttimer.Stop();
+                    ((Label)this.FindName("donwstring")).Visibility = Visibility.Hidden;
+                    ((System.Windows.Controls.Image)this.FindName("downimage")).Visibility = Visibility.Hidden;
+                }
+            });
+        }
+
+        private void lighting(object sender, EventArgs e)
+        {
+
+            if (((Label)this.FindName("donwstring")).Visibility == Visibility.Hidden)
+            {
+                ((Label)this.FindName("donwstring")).Visibility = Visibility.Visible;
+                ((System.Windows.Controls.Image)this.FindName("downimage")).Visibility = Visibility.Visible;
+            }
+            else
+            {
+                ((Label)this.FindName("donwstring")).Visibility = Visibility.Hidden;
+                ((System.Windows.Controls.Image)this.FindName("downimage")).Visibility = Visibility.Hidden;
+
+            }
+
+        }
+
+
+
+
         private void downloadFile(string path, string version,string filename)
         {
+
+            downloadFeedback(true);
             NetworkHandler.getInstance().addFunction((Socket s) => {
                 try {
                 // selecting operation
@@ -1177,6 +1243,7 @@ namespace PDS_Client
                 Dispatcher.Invoke(() =>
                 {
                     ((StackPanel)this.FindName("panel_details")).Children.Clear();
+                    downloadFeedback(false);
 
                 });
                     Monitor.Enter(this);
@@ -1192,6 +1259,7 @@ namespace PDS_Client
                   
                 }
             });
+         
         }
 
         /*
