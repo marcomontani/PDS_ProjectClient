@@ -101,17 +101,30 @@ namespace PDS_Client
             };
             System.Windows.Forms.ContextMenu menu = new System.Windows.Forms.ContextMenu();
             menu.MenuItems.Add("Apri");
+            menu.MenuItems.Add("Logout");
             menu.MenuItems.Add("Esci");
+            
             ((Label)FindName("user_label")).Content =user[0];
             ((Label)FindName("user_label")).ToolTip = user+"@poliHub";
-      
+
 
             menu.MenuItems[0].Click += (s,e) =>
             {
                 this.Show();
                 noty.Visible = false;
             };
+
             menu.MenuItems[1].Click += (s, e) =>
+            {                
+                NetworkHandler.getInstance().killWorkers();
+                NetworkHandler.deleteInstance();
+                File.Delete("./polihub.settings");
+                Window1 loginPage = new Window1();
+                loginPage.Show();
+                this.Close();
+            };
+
+            menu.MenuItems[2].Click += (s, e) =>
             {                
                 noty.Visible = false;
                 NetworkHandler.getInstance().killWorkers();
@@ -150,7 +163,7 @@ namespace PDS_Client
             timer.Interval = new TimeSpan(0, 0, 0, 0, 25);
             timer.Tick += new EventHandler(move);
             timerfly.Start();
-            
+
 
         }
 
@@ -166,7 +179,7 @@ namespace PDS_Client
 
             Storyboard sb = (Storyboard)((Grid)this.FindName("fs_container")).FindResource("flymove2");
             sb.Begin();
-               timer.Start();
+            timer.Start();
 
             fly.MouseLeftButtonDown += mousemove;
 
@@ -183,34 +196,34 @@ namespace PDS_Client
             if (fly.Visibility == Visibility.Hidden) return;
                 counterFly = 300;
                 fly.RenderTransform = new RotateTransform(0, 0.5, 0.5);
-                sb2.Begin();
+                sb2.Begin();             
                 System.Windows.Threading.DispatcherTimer timer2 = new System.Windows.Threading.DispatcherTimer();
                 timer2.Tick += new EventHandler((st, et) => {
                 if (counterFly != 0)
-                {
+                    {
                     //((Label)this.FindName("donwstring")).Content = "" + marginFly + "" + counterFly;
-                    counterFly--;
+                        counterFly--;
                     fly.Margin = new Thickness(fly.Margin.Left - 15, fly.Margin.Top - 15, fly.Margin.Right, fly.Margin.Bottom);
-                 }
-                else
-                {
-                    timer2.Stop();
-                    sb2.Stop();
-                    fly.Margin = new Thickness(449, 448, 0, 0);
+                    }
+                    else
+                    {
+                        timer2.Stop();
+                        sb2.Stop();
+                        fly.Margin = new Thickness(449, 448, 0, 0);
                     fly.Visibility = Visibility.Hidden;
 
-                }
+                    }
                 });
                 timer2.Interval = new TimeSpan(0, 0, 0, 0, 5);
                 timer2.Start();
 
 
-            }
+        }
 
         void move(object sender, EventArgs e)
         { //Margin="508,315,170,0"
             System.Windows.Controls.Image fly = (System.Windows.Controls.Image)((Grid)this.FindName("fs_container")).FindName("fly");
-            
+
             if (counterFly<32)
             {
              //   ((Label)this.FindName("donwstring")).Content = ""+ marginFly + "" + counterFly;
@@ -251,7 +264,6 @@ namespace PDS_Client
             }
             else
             {
-                
                 counterFly = 0;
                 Random rnd = new Random();
                 marginFly = rnd.Next(1, 12); 
@@ -373,6 +385,9 @@ namespace PDS_Client
             }
         }
 
+        /*
+            This function is used to update the address bar, where we can se the current path
+        */
         public void updateAddress()
         {
             
@@ -469,6 +484,7 @@ namespace PDS_Client
 
         }
 
+
         private void insertFilesFromJSON(List<JSONDeletedFile> items, bool trash)
         {
             ((StackPanel)this.FindName("fs_grid")).Children.Clear();
@@ -530,6 +546,9 @@ namespace PDS_Client
          
         }
 
+        /*
+            This functions creates the storyline of the selected file in the right bar
+        */
         private Border getCalendar(string date, BrushConverter bc, string completePath ,string filename)
         {
             string hour_s = date.Split(' ')[1].Split(':')[0]+":"+date.Split(' ')[1].Split(':')[1];
@@ -667,34 +686,25 @@ namespace PDS_Client
             return brd;
         }
 
-
+        // used when mouse is moving on the download file icon
         private void mousenter(object sender, MouseEventArgs e)
         {                 
                   ((System.Windows.Controls.Image)sender).Source = new BitmapImage(new Uri(@"\images\downloadhigh.png", UriKind.RelativeOrAbsolute));
                   ImageBehavior.SetAnimatedSource(((System.Windows.Controls.Image)sender), ((System.Windows.Controls.Image)sender).Source);
             return;
         }
-
+        // used when mouse is moving out of the download file icon
         private void mouseleave(object sender, MouseEventArgs e)
         {
-
             ((System.Windows.Controls.Image)sender).Source = new BitmapImage(new Uri(@"\images\download.png", UriKind.RelativeOrAbsolute));
-
-        }
-
-        private void mouseleft(object sender, MouseEventArgs e)
-        {
-
-            System.Windows.Controls.Image dwn = ((System.Windows.Controls.Image)sender);
-
         }
 
 
-
-
+        /*
+            This function creates the view of the files in the directory where the user is currently
+        */
         private void addCurrentFoderInfo(string path)
         {
- 
             Debug.WriteLine("into addCurrentFoderInfo");
             StackPanel g = (StackPanel)this.FindName("fs_grid");
             // <Image Source="/images/pixelart.png" x:Name="image1" Height="997" Margin="782,0,0,0"/>
@@ -850,6 +860,7 @@ namespace PDS_Client
 
         }
 
+
         private void Panel_MouseEnter(object sender, MouseEventArgs e)
         {
             throw new NotImplementedException();
@@ -884,7 +895,7 @@ namespace PDS_Client
                 socket.Receive(inBuff);
                 if (!Encoding.ASCII.GetString(inBuff).Contains("OK")) throw new Exception("error: file not uploaded correctly");
 
-
+                
                 downloadFeedback(false, "UPLOAD");
                 socket.Send(getSha1(path));
                 socket.Receive(inBuff);
@@ -1040,9 +1051,9 @@ namespace PDS_Client
                     }
                     else
                         Dispatcher.Invoke(updateFolders);
-                  
-                }
-       
+
+                }         
+                
                 return; 
             });
         }
@@ -1321,6 +1332,9 @@ namespace PDS_Client
             watchFolder();
         }
 
+        /*
+            This flag is used to syncronize the threads for some operations. for example i cannot enter in a folder if the right panel is open
+        */
         private void setFlag(bool f)
         {
 
@@ -1355,9 +1369,10 @@ namespace PDS_Client
         /*
             EVENT HANDLERS
         */
+
+        // Specify what is done when a file is changed or created
         private void OnChanged(object source, FileSystemEventArgs e)
         {
-            // Specify what is done when a file is changed, created, or deleted.
             Debug.WriteLine("\n\nInto onchanged  for " + e.FullPath + "\n");
             if (!e.FullPath.Contains(".")) return; // if it is a folder i am not interested
             Monitor.Enter(events_semaphore);
@@ -1383,6 +1398,7 @@ namespace PDS_Client
             
         }
 
+        // Specify what is done when a file is deleted.
         public void fileDeleted(string path)
         {
             NetworkHandler.getInstance().addFunction((Socket socket) =>
@@ -1396,10 +1412,9 @@ namespace PDS_Client
             }); 
         }
 
+        // this allows the user to move the window using the mouse
         private void mouse_MouseDown(object sender, MouseButtonEventArgs e)
         {
-         
-            //if (sender.GetType().FullName=="StackPanel") M
             try {
                 this.DragMove();
             }catch(InvalidOperationException)
@@ -1408,12 +1423,14 @@ namespace PDS_Client
             }
         }
 
+        // behaviour of the top right button, the one with an X on it
         private void mouse_x_click(object sender, RoutedEventArgs e)
         {
             this.Hide();
             noty.Visible = true;
         }
 
+        // this function specifies what happens when a folder icon is clicked
         private void MouseFolderButtonDownHandler(object sender, MouseButtonEventArgs e)
         {
             if (((UIElement)this.FindName("details_container")).Visibility != Visibility.Collapsed) return;
@@ -1427,9 +1444,9 @@ namespace PDS_Client
             
         }
 
+        // returns the filename of the file where i clicked since the click is on the entire stackpanel
         private string getFileNamesender(StackPanel sender)
         {
-           
             ((UIElement)this.FindName("details_container")).Visibility = Visibility.Visible;
             // i start here a thread in order to download the versions of this file
             ((StackPanel)this.FindName("panel_details")).Children.Clear();
@@ -1439,6 +1456,7 @@ namespace PDS_Client
 
         }
 
+        // this function makes the right panel open and downloads the informations (asks the networkhandler to download) about the versions of the selected file
         private void drawVersionCalendar(string filename)
         {
             restoreHandlers.Clear();
@@ -1498,6 +1516,7 @@ namespace PDS_Client
 
         }
 
+        // behaviour when a file icon is clicked
         private void MouseFileButtonDownHandler(object sender, RoutedEventArgs e) {
 
             Monitor.Enter(this);
@@ -1538,6 +1557,7 @@ namespace PDS_Client
             e.Handled = true;
         }
 
+        // behaviour when the trash icon is clicked
         private void MouseTrashHandler(object sender, RoutedEventArgs e)
         {
             if (((UIElement)this.FindName("details_container")).Visibility != Visibility.Collapsed) return;
@@ -1587,6 +1607,7 @@ namespace PDS_Client
             });
         }
 
+        // behaviour when a file icon is clicked while we are in the trash
         private void MouseFileThrashHandler(object sender, RoutedEventArgs e)
         {
             string path = ((TextBlock)((Panel)sender).Children[2]).Text + "\\" + ((TextBlock)((Panel)sender).Children[1]).Text;
@@ -1599,6 +1620,7 @@ namespace PDS_Client
             if(res == System.Windows.Forms.DialogResult.Abort)removeFilePermanently(path);
         }
 
+        // starts the animation which closes the right panel
         private void closeVersions(object sender, MouseButtonEventArgs e)
         {
             Monitor.Enter(this);
@@ -1625,6 +1647,7 @@ namespace PDS_Client
             sb.Begin();
         }
 
+        // makes the right panel invisible
         private void closeSidebar(object sender, EventArgs e)
         {
            
@@ -1640,6 +1663,7 @@ namespace PDS_Client
             }
             setFlag(true);
         }
+
 
         private void TS_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         {
